@@ -1,0 +1,26 @@
+{
+    "name": "The Village Square",
+    "id": "berk_square",
+    "description": "The crossroads of Berk. Traders shout over the chatter of villagers, kids chase Terrible Terrors through the mud, and a few dragons sneak fish from the stalls. It's noisy, messy, alive — the pulse of daily life where every path eventually meets.",
+    "ambient": [
+        "Children shriek with laughter as a sheep dashes between stalls, chased by a determined Terrible Terror. The market buzzes with bartering, gossip, and dragon hiccups. Somewhere nearby, a lute strikes up a tune that nobody asked for but everyone hums anyway."
+    ],
+    "actions": [
+        {
+            "line": "I could follow the open lane leading downhill. The ground's packed smooth from dragon claws and boots.",
+            "event": "finn.LocationTeleportEngineEvent('berk_stables')"
+        },
+        {
+            "line": "Those rising stone steps look solid. I can head up them toward the big timber structure ahead.",
+            "event": "finn.LocationTeleportEngineEvent('berk_great_hall')"
+        },
+        {
+            "line": "There's a narrow alley here. I could slip through it and see where all that hammering is coming from.",
+            "event": "finn.LocationTeleportEngineEvent('berk_forge')"
+        },
+        {
+            "line": "The broad stone path curves outward from here. I could follow it and see what's ahead.",
+            "event": "finn.LocationTeleportEngineEvent('berk_arena')"
+        }
+    ]
+}

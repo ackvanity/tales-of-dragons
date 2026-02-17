@@ -1,0 +1,18 @@
+{
+    "name": "The Training Arena",
+    "id": "berk_arena",
+    "description": "A circular pit of scorched earth and broken spears. The stands are empty more often than not, but the echoes of roaring dragons and cheering Vikings linger. It's where riders learn trust — and where overconfidence earns singed eyebrows.",
+    "ambient": [
+        "The scent of scorched earth lingers beneath a sky filled with drifting smoke. A Gronckle snoozes beside the fence while a young Viking practices sword swings that slice only air. Somewhere, armor clinks and someone mutters, “again,” to nobody in particular."
+    ],
+    "actions": [
+        {
+            "line": "There's a main walkway leading back toward the village. I can follow it without trouble.",
+            "event": "finn.LocationTeleportEngineEvent('berk_square')"
+        },
+        {
+            "line": "A quiet little trail slips off into the trees. I could take it if I feel like heading that way.",
+            "event": "finn.LocationTeleportEngineEvent('berk_cove')"
+        }
+    ]
+}
