@@ -1,23 +1,24 @@
 from dragonic.interactions import send_dialogue, send_prompt, add_character_hook, add_location_hook, send_story, send_pause
-from dragonic.core import player_name
+from dragonic.core import world
 
-add_character_hook("hiccup", "Hey Hiccup, is that a new tailfin you got for Toothless?")
-send_dialogue("hiccup", "Uhh, if you put it that way... yes. Just please don't tell Astrid yet. I really want to take this out on a flight.")
-send_dialogue("hiccup", "Wanna go together? I bet Toothless would be happy, right bud?")
+async def main():
+  await add_character_hook("hiccup", "Hey Hiccup, is that a new tailfin you got for Toothless?")
+  await send_dialogue("Hiccup", "Uhh, if you put it that way... yes. Just please don't tell Astrid yet. I really want to take this out on a flight.")
+  await send_dialogue("Hiccup", "Wanna go together? I bet Toothless would be happy, right bud?")
 
-option = send_prompt(["Yes, of course!", "Uh, no thanks..."])
+  option = await send_prompt(["Yes, of course!", "Uh, no thanks..."])
 
-if option.index == 0:
-  send_story("The two of you soar above the skies with Toothless. The wind pushing against your face. Hiccup does his usual twisting and turning, and creaks come out like usual.")
-  send_dialogue("hiccup", f"So, {player_name}, how's the flight? Enjoyable, right?")
+  if option.index == 0:
+    await send_story("The two of you soar above the skies with Toothless. The wind pushing against your face. Hiccup does his usual twisting and turning, and creaks come out like usual.")
+    await send_dialogue("Hiccup", f"So, {await world.player.name}, how's the flight? Enjoyable, right?")
 
-  option = send_prompt(["Yeah, we should go again some time later", "Uh, not really! I'm scared of heights!"])
-  send_dialogue("player", option.text)
+    option = await send_prompt(["Yeah, we should go again some time later", "Uh, not really! I'm scared of heights!"])
+    await send_dialogue(await world.player.name, option.text)
 
-  send_story("The tail creaks. At first you thought it was because it's a prototype. Then it grew louder. And a crack appeared. As quick as thunder the tail bids farewell. You lost grip and crashed on the arid woods of somewhere at Berk.")
+    await send_story("The tail creaks. At first you thought it was because it's a prototype. Then it grew louder. And a crack appeared. As quick as thunder the tail bids farewell. You lost grip and crashed on the arid woods of somewhere at Berk.")
 
-  send_dialogue("player", f"Uhhh, where are we?")
+    await send_dialogue(await world.player.name, f"Uhhh, where are we?")
 
-  send_story("You'll heroically save Hiccup in due time")
-else:
-  send_story("You'll heroically save Hiccup in due time")
+    await send_story("You'll heroically save Hiccup in due time")
+  else:
+    await send_story("You'll heroically save Hiccup in due time")
