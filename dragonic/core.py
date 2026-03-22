@@ -30,7 +30,7 @@ class Proxy:
   
   async def set(self, value):
     syscall = WriteAttrSyscall()
-    syscall.path = self.pathj
+    syscall.path = self._path
     syscall.value = value
     return await syscall
 

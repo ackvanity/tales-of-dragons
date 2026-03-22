@@ -25,7 +25,7 @@ class Serializable(ABC):
     def tag() -> str:
         pass
 
-class State(ABC, Serializable):
+class State(Serializable):
     @property
     @abstractmethod
     def version(self) -> int:
@@ -137,7 +137,7 @@ class HaddockEvent(Event):
     pass
 
 # Mailed when the engine is running
-class TeamAssmebled(HaddockEvent):
+class TeamAssembled(HaddockEvent):
     pass
 
 
@@ -335,16 +335,16 @@ class Hiccup:
             raise KeyError(position)
 
     def call_entities(self, clan=None, species=None, name=None):
-        entites = []
+        entities = []
         for k, v in self.entities.items():
             if (
                 (k.clan == clan or clan == None)
                 and (k.species == species or species == None)
                 and (k.name == name or name == None)
             ):
-                entites.append((k,v))
+                entities.append((k,v))
 
-        return entites
+        return entities
 
 
 Riders: TypeAlias = list[EventRider | StateRider | EntityRider]

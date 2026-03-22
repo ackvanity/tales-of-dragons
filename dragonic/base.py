@@ -26,7 +26,7 @@ class Item(Segment):
     key: KeyLike
 
     def __init__(self, key: KeyLike) -> None:
-        self.ke = key
+        self.key = key
 
 class AttrSyscall(Syscall):
     path: list[Segment]

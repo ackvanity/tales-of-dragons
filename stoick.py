@@ -101,4 +101,4 @@ class TextualApplication(App):
     asyncio.create_task(self.ensure_singleton(Story)).add_done_callback(x)
 
   def on_mount(self) -> None:
-    haddock.chieftain.mail_event(haddock.TeamAssmebled())
+    haddock.chieftain.mail_event(haddock.TeamAssembled())

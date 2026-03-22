@@ -12,7 +12,7 @@ class Item(BaseItem):
 
 
 class NoItem(BaseItem):
-  name: str = "Emply Slot"
+  name: str = "Empty Slot"
   description: str = "No items here..."
 
   @property

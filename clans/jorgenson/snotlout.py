@@ -292,7 +292,7 @@ class DragonicQuestRider(haddock.EntityRider[DragonicQuest]):
         if isinstance(event, ReturnDataEvent) and event.script == entity.id:
             entity.step(event.data)
 
-        if isinstance(event, haddock.TeamAssmebled) and not len(entity.data_stream):
+        if isinstance(event, haddock.TeamAssembled) and not len(entity.data_stream):
             entity.step(None)
 
 
