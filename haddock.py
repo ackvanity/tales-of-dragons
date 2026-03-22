@@ -1,4 +1,4 @@
-from typing import Callable, TypeAlias, TypeVar, Generic, Type
+from typing import Callable, TypeAlias, TypeVar, Generic, Type, Union
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
@@ -10,72 +10,78 @@ V = TypeVar("V", bound="EngineEvent")
 C = TypeVar("C", bound="RenderCommand")
 R = TypeVar("R", bound="Serializable")
 
+JSONValue = Union["JSONPrimitive", "JSONObject", "JSONArray"]
+JSONPrimitive = Union[str, int, float, bool, None]
+JSONObject = dict[str, JSONValue]
+JSONArray = list[JSONValue]
+
 class Serializable(ABC):
-    @abstractmethod
-    def serialize(self) -> str:
-        pass
+    # @abstractmethod
+    # def serialize(self) -> JSONValue:
+    #     pass
     
-    @classmethod
-    @abstractmethod
-    def deserialize(cls: Type[R], data: str) -> R:
-        pass
+    # @classmethod
+    # @abstractmethod
+    # def deserialize(cls: Type[R], data: JSONValue) -> R:
+    #     pass
     
-    @staticmethod
-    @abstractmethod
-    def tag() -> str:
-        pass
+    # @staticmethod
+    # @abstractmethod
+    # def tag() -> str:
+    #     pass
+
+    pass
 
 class State(Serializable):
-    @property
-    @abstractmethod
-    def version(self) -> int:
-        pass
+    # @property
+    # @abstractmethod
+    # def version(self) -> int:
+    #     pass
 
-    @abstractmethod
-    def _serialize(self) -> str:
-        return ""
+    # @abstractmethod
+    # def _serialize(self) -> JSONValue:
+    #     return ""
 
-    @classmethod
-    @abstractmethod
-    def _deserialize(cls: Type[S], data: str, version: int) -> S:
-        pass
+    # @classmethod
+    # @abstractmethod
+    # def _deserialize(cls: Type[S], data: JSONValue, version: int) -> S:
+    #     pass
 
-    def serialize(self) -> str:
-        return json.dumps([self.version, self._serialize()])
+    # def serialize(self) -> JSONValue:
+    #     return [self.version, self._serialize()]
     
-    @classmethod
-    def deserialize(cls: Type[S], data: str) -> S:
-        obj = json.loads(data)
-        return cls._deserialize(obj[1], obj[0])
-
+    # @classmethod
+    # def deserialize(cls: Type[S], data: JSONValue) -> S:
+    #     return cls._deserialize(data[1], data[0]) # type: ignore
+    pass
 
 class Entity(ABC):
-    @property
-    @abstractmethod
-    def version(self) -> int:
-        pass
+    # @property
+    # @abstractmethod
+    # def version(self) -> int:
+    #     pass
 
-    @abstractmethod
-    def _serialize(self) -> str:
-        return ""
+    # @abstractmethod
+    # def _serialize(self) -> JSONValue:
+    #     return ""
     
-    @staticmethod
-    @abstractmethod
-    def tag() -> str:
-        pass
+    # @staticmethod
+    # @abstractmethod
+    # def tag() -> str:
+    #     pass
 
-    @classmethod
-    @abstractmethod
-    def _deserialize(cls: Type[E], data: str, version: int) -> E:
-        pass
+    # @classmethod
+    # @abstractmethod
+    # def _deserialize(cls: Type[E], data: JSONValue, version: int) -> E:
+    #     pass
 
-    def serialize(self) -> str:
-        return json.dumps([self.version, self._serialize()])
+    # def serialize(self) -> JSONValue:
+    #     return [self.version, self._serialize()]
     
-    @classmethod
-    def deserialize(cls: Type[E], data: str) -> E:
-        obj = json.loads(data)
-        return cls._deserialize(obj[1], obj[0])
+    # @classmethod
+    # def deserialize(cls: Type[E], data: JSONValue) -> E:
+    #     return cls._deserialize(data[1], data[0]) # type: ignore
+    pass
 
 @dataclass(frozen=True)
 class EntityID:

@@ -22,7 +22,7 @@ class InterceptedCallException(Exception):
 
 
 class ReturnDataEvent(haddock.Event):
-    data: Any
+    data: haddock.JSONValue
     script: str
 
     def __init__(self, data, script):
@@ -274,9 +274,9 @@ class DragonicQuest(haddock.Entity):
                 if isinstance(syscall, dragonic.base.ReadAttrSyscall):
                     if syscall.path[0] == dragonic.base.Attr("player"):
                         if syscall.path[1] == dragonic.base.Attr("name"):
-                            return self.step(haddock.chieftain.call_entity(haddock.EntityID("jorgenson", "player", "player")).name)
+                            return self.step(haddock.chieftain.call_entity(haddock.EntityID("jorgenson", "player", "player")).name) # type: ignore
                         if syscall.path[1] == dragonic.base.Attr("health"):
-                            return self.step(haddock.chieftain.call_entity(haddock.EntityID("jorgenson", "player", "player")).health)
+                            return self.step(haddock.chieftain.call_entity(haddock.EntityID("jorgenson", "player", "player")).health) # type: ignore
 
                     print(f"Unrecognized path: {syscall.path}")
 

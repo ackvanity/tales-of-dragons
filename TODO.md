@@ -3,8 +3,6 @@
 ## 🔴 Bugs
 
 - [ ] `Satchel._deserialize` is commented out — save/load broken for inventory
-- [ ] `DragonicQuest.data_stream` grows forever, never pruned — replay cost increases unbounded
-- [ ] `stoick.py` async callback race: `group.children[0]` accessed before mount completes in `send_location` / `send_character`
 
 ## 🟡 Architecture
 
@@ -23,14 +21,5 @@
 - [ ] Cache file reads in `Human.__init__` — currently calls `parse_character_data(core.get_data(...))` three separate times
 - [ ] NPC memory layer — `NPCMemory` dataclass (sentiment, episodic list, relationship score) saved separately from engine state
 - [ ] Villain shadow-reasoning system — player profiling + private "predicted next move" updated after every player action
-- [ ] `JsonValue` recursive type alias — enforce JSON-compliant return types on serialize methods
-
-## ✅ Done
-
-- [x] Mutable class-level defaults on `Hiccup` (`states`, `entities`, `event_queue`, etc.) — moved to `__init__`
-- [x] `TeamAssmebled` typo — fixed to `TeamAssembled` across `haddock.py`, `stoick.py`, `snotlout.py`
-- [x] `entites` typo in `call_entities` — fixed to `entities`
-- [x] `"Emply Slot"` typo in `fishlegs.py` — fixed to `"Empty Slot"`
-- [x] `self.ke = key` bug in `dragonic/base.py` `Item.__init__` — fixed to `self.key`
-- [x] `self.pathj` bug in `dragonic/core.py` `Proxy.set()` — fixed to `self._path`
-- [x] Private email in git history — scrubbed and force-pushed
+- [ ] `DragonicQuest.data_stream` checkpoint compression — filter to non-None entries to skip auto-resolved syscalls on replay (very low priority; only relevant if a single quest accumulates tens of thousands of entries across many sessions)
+- [ ] LLM-driven NPCs cannot run inside Dragonic — LLM calls are non-deterministic and would break replay. Keep LLM NPC logic entirely outside Dragonic; use `AddCharacterHookSyscall` as the bridge when a quest needs to trigger an NPC interaction

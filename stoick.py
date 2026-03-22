@@ -35,15 +35,16 @@ class TextualApplication(App):
       await self.clear_history()
       await self.query_one("#application").mount(klass())
 
+  async def _send_to_story(self, widget):
+    await self.ensure_singleton(Story)
+    story = self.query_one("#application").children[0]
+    widget.mount_self(story)
+
   def send_location(self, location):
-    widget = Location(location)
-    group = self.query_one("#application")
-    asyncio.create_task(self.ensure_singleton(Story)).add_done_callback(lambda _: widget.mount_self(group.children[0])) # type: ignore
+    asyncio.create_task(self._send_to_story(Location(location)))
 
   def send_character(self, character):
-    widget = Character(character)
-    group = self.query_one("#application")
-    asyncio.create_task(self.ensure_singleton(Story)).add_done_callback(lambda _: widget.mount_self(group.children[0])) # type: ignore
+    asyncio.create_task(self._send_to_story(Character(character)))
   
   def send_satchel_list(self, satchels):
       async def x(): 
@@ -61,44 +62,23 @@ class TextualApplication(App):
 
       asyncio.create_task(x())
   
-  def send_prompt(self, options):
-    group = self.query_one("#application")
+  async def _append_to_story(self, node):
+    await self.ensure_singleton(Story)
+    story = self.query_one("#application").children[0]
+    story.nodes.append(node) # type: ignore
+    story.refresh(recompose=True)
 
-    def x(_):
-      story = group.children[0]
-      prompt = Prompt()
-      story.nodes.append(prompt) # type: ignore
-      for option in options:
-        prompt.options.append(EventEmitButton(option[0], option[1]))
-      
-      print(f"Added option: {prompt.options}")
-      print(f"{story.nodes}") # type: ignore
-      story.refresh(recompose=True)
-      
-    asyncio.create_task(self.ensure_singleton(Story)).add_done_callback(x)
+  def send_prompt(self, options):
+    prompt = Prompt()
+    for option in options:
+      prompt.options.append(EventEmitButton(option[0], option[1]))
+    asyncio.create_task(self._append_to_story(prompt))
 
   def send_dialogue(self, character, line):
-    group = self.query_one("#application")
+    asyncio.create_task(self._append_to_story(Dialogue(character, line)))
 
-    def x(_):
-      story = group.children[0]
-      dialogue = Dialogue(character, line)
-      story.nodes.append(dialogue) # type: ignore
-      story.refresh(recompose=True)
-      
-    asyncio.create_task(self.ensure_singleton(Story)).add_done_callback(x)
-    
   def send_story(self, line):
-    print("SENDING STORY", line)
-    group = self.query_one("#application")
-
-    def x(_):
-      story = group.children[0]
-      dialogue = Paragraph(line)
-      story.nodes.append(dialogue) # type: ignore
-      story.refresh(recompose=True)
-      
-    asyncio.create_task(self.ensure_singleton(Story)).add_done_callback(x)
+    asyncio.create_task(self._append_to_story(Paragraph(line)))
 
   def on_mount(self) -> None:
     haddock.chieftain.mail_event(haddock.TeamAssembled())

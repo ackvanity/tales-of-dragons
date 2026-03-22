@@ -20,7 +20,7 @@ class Attr(Segment):
         self.name = name
 
 KeyLike = int | bool | str | haddock.EntityID
-ValueLike = int | float | bool | str | haddock.EntityID | haddock.Entity | haddock.State
+ValueLike = haddock.EntityID | haddock.Entity | haddock.State | haddock.JSONValue
 
 class Item(Segment):
     key: KeyLike
