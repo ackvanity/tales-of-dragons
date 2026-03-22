@@ -3,7 +3,10 @@ import stoick
 from clans.hofferson import astrid, finn
 from clans.ingerman import fishlegs
 from clans.jorgenson import snotlout
-import dragonic.core
+from components.hofferson.astrid import TalkingRenderChief
+from components.hofferson.finn import WanderingRenderChief
+from components.ingerman.fishlegs import SatchelsListRenderChief, SatchelItemsRenderChief
+from components.jorgenson.snotlout import PromptRenderChief, DialogueRenderChief, StoryRenderChief
 
 astrid.modules.append(fishlegs)
 finn.modules.append(fishlegs)
@@ -15,6 +18,14 @@ haddock.chieftain.register_clan(astrid)
 haddock.chieftain.register_clan(finn)
 haddock.chieftain.register_clan(fishlegs)
 haddock.chieftain.register_clan(snotlout)
+
+haddock.chieftain.declare_chief(TalkingRenderChief())
+haddock.chieftain.declare_chief(WanderingRenderChief())
+haddock.chieftain.declare_chief(SatchelsListRenderChief())
+haddock.chieftain.declare_chief(SatchelItemsRenderChief())
+haddock.chieftain.declare_chief(PromptRenderChief())
+haddock.chieftain.declare_chief(DialogueRenderChief())
+haddock.chieftain.declare_chief(StoryRenderChief())
 
 haddock.chieftain.states.append(finn.Wandering("berk_arena"))
 haddock.chieftain.states.append(astrid.Talking("hiccup"))

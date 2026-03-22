@@ -11,10 +11,20 @@
 - [ ] Make `Entity` extend `Serializable` — currently reimplements the interface manually without inheriting it
 - [ ] Add `tag()` implementations to all concrete `Entity` and `State` subclasses — required for save/load type registry
 - [ ] Build save/load orchestration on `Hiccup` — no code currently walks engine state and serializes it
-- [ ] `stoick.py` knows about `fishlegs` inventory types directly — breaks MVC boundary; `Application` should accept a generic `RenderCommand` instead of named per-feature methods
+
 - [ ] Replace mutable module-level `modules = []` lists in `astrid` and `finn` with explicit `register_module()` API + `Module` dataclass or ABC
 - [ ] Rename `data/quest/` to `content/quests/` — quest scripts are executable Python, not static data
 - [ ] `Location.actions` scans all characters on every render — should use event-driven location tracking instead
+
+## 🔧 Chores
+
+- [ ] `RenderChief.render()` second parameter typed as bare `object` / untyped throughout — should be `TextualApplication` now that chiefs live in the View layer
+- [ ] `StateRider.render()` and `roll_call()` use untyped `Event` rather than the specific subtype — consider bounded generics or overloads where the event type is known
+- [ ] `Hiccup.register_clan()` takes untyped `clan` — should accept a typed protocol/dataclass with `riders` and `chiefs` attributes
+- [ ] `Hiccup.call_entity()` return type is untyped — generic overload with `Type[E]` hint on the `default` param would let callers skip the `# type: ignore`
+- [ ] `DialogueAction.line` property body is `...` (ellipsis) — should be `@abstractmethod` or raise `NotImplementedError`
+- [ ] `Location.interpret_action()` casts with `# type: ignore` — the `LocationAction` / `LiteralLocationAction` hierarchy should be tightened so the cast is unnecessary
+- [ ] `DragonicQuest.__init__` default arg `data_stream=[]` is a mutable default — replace with `data_stream=None` and assign in body
 
 ## 🟢 Enhancements
 

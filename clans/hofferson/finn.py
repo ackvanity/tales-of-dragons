@@ -143,24 +143,9 @@ class WanderingRider(haddock.StateRider[Wandering]):
         return WanderingRenderCommand(state.to, location.ambient, actions)
 
 
-class WanderingRenderChief(haddock.RenderChief[WanderingRenderCommand]):
-    command_type = WanderingRenderCommand
-
-    def render(self, command: WanderingRenderCommand, application) -> None:
-        render_state = {
-            "location": command.id,
-            "ambient": command.line,
-            "actions": [
-                {"line": action.line, "signal": action.signal}
-                for action in command.actions
-            ],
-        }
-
-        application.send_location(render_state)
-
 def get_location(id: str) -> Location:
     return haddock.chieftain.call_entity(haddock.EntityID("hofferson", "location", id), lambda: Location(id))  # type: ignore
 
 
 riders: haddock.Riders = [LocationRider(), WanderingRider(), LocationTeleportRider()]
-chiefs: haddock.Chiefs = [WanderingRenderChief()]
+chiefs: haddock.Chiefs = []

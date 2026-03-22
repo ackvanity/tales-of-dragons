@@ -6,6 +6,9 @@ class BaseItem(haddock.Entity):
   name: str
   description: str
 
+  def serialize(self) -> haddock.JSONValue:
+    raise NotImplementedError
+
 class Item(BaseItem):
   name: str = "Item"
   description: str = "A generic item. Nobody knows what it is useful for..."
@@ -122,21 +125,6 @@ class SatchelItemsRider(haddock.StateRider[SatchelItems]):
 
     return SatchelItemsRenderCommand(f"Satchel ({satchel.capacity} items)", satchel.items + [NoItem() for _ in range(satchel.capacity - len(satchel.items))])
   
-class SatchelsListRenderChief(haddock.RenderChief[SatchelsListRenderCommand]):
-  command_type = SatchelsListRenderCommand
-
-  def render(self, command: SatchelsListRenderCommand, application) -> None:
-    application.send_satchel_list(command.satchels)
-
-class SatchelItemsRenderChief(haddock.RenderChief[SatchelItemsRenderCommand]):
-  command_type = SatchelItemsRenderCommand
-
-  def render(self, command: SatchelItemsRenderCommand, application) -> None:
-    application.send_satchel_items({
-      "title": command.title,
-      "items": command.items
-    })
-
 class OpenSatchelsEvent(haddock.EngineEvent):
   pass
 
@@ -183,4 +171,4 @@ def get_satchel(owner: haddock.EntityID):
 
 extra_character_actions: list[astrid.DialogueAction] = [OpenSatchelsListAction()]
 riders: haddock.Riders = [SatchelsListRider(), SatchelItemsRider(), OpenSatchelsEventRider(), OpenSatchelItemsEventRider()]
-chiefs: haddock.Chiefs = [SatchelsListRenderChief(), SatchelItemsRenderChief()]
+chiefs: haddock.Chiefs = []

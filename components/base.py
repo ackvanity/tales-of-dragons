@@ -1,9 +1,6 @@
-from textual.app import App, ComposeResult
-from textual.widgets import Footer, Header, Label, Button
-from textual.containers import VerticalScroll, VerticalGroup
+from textual.widgets import Button
 from textual.reactive import reactive
 import haddock
-from clans.ingerman import fishlegs
 
 class EventEmitButton(Button):
   event: reactive[haddock.Event] = reactive(haddock.Event())

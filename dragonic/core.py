@@ -1,6 +1,5 @@
 from typing import Any
-import haddock
-from dragonic.base import Segment, Item, Attr, ReadAttrSyscall, WriteAttrSyscall
+from dragonic.base import Segment, Attr, ReadAttrSyscall, WriteAttrSyscall
 
 class Proxy:
   _path: list[Segment]

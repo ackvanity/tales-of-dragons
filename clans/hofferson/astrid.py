@@ -167,7 +167,7 @@ class HumanRider(haddock.EntityRider[Human]):
         if isinstance(event, BaseAddDialogueEvent):
             print(f"Trying to add a line to {event.character} - now at {entity.id}")
         if isinstance(event, BaseAddDialogueEvent) and event.character == entity.id:
-            print(f"Adding line!")
+            print("Adding line!")
             action = LiteralDialogueAction()
             action.line = event.line
             action.signal = event.event
@@ -197,25 +197,9 @@ class TalkingRider(haddock.StateRider[Talking]):
         return TalkingRenderCommand(character.name, character.line, actions) # type: ignore
 
 
-class TalkingRenderChief(haddock.RenderChief[TalkingRenderCommand]):
-    command_type = TalkingRenderCommand
-
-    def render(self, command: TalkingRenderCommand, application) -> None:
-        render_state = {
-            "speaker": command.speaker,
-            "line": command.line,
-            "actions": [
-                {"line": action.line, "signal": action.signal}
-                for action in command.actions
-            ],
-        }
-
-        application.send_character(render_state)
-
-
 def get_human(name: str) -> Human:
     return haddock.chieftain.call_entity(haddock.EntityID("hofferson", "human", name), lambda: Human(name))  # type: ignore
 
 
 riders: haddock.Riders = [HumanRider(), TalkingRider(), HumanInteractRider(), AddDialogueEventRider()]
-chiefs: haddock.Chiefs = [TalkingRenderChief()]
+chiefs: haddock.Chiefs = []

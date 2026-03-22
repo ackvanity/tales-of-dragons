@@ -1,12 +1,12 @@
 import ast
 from dataclasses import dataclass
-from typing import List, Tuple, Any, Dict
+from typing import List, Tuple
 import haddock
 import dragonic.base
 import dragonic.core
 import dragonic.interactions
 import uuid
-from clans.hofferson import finn, astrid
+from clans.hofferson import astrid
 import librarians.core
 
 class Player(haddock.Entity):
@@ -93,13 +93,6 @@ class PromptRider(haddock.StateRider[Prompt]):
         return command
 
 
-class PromptRenderChief(haddock.RenderChief[PromptRenderCommand]):
-    command_type = PromptRenderCommand
-
-    def render(self, command: PromptRenderCommand, application) -> None:
-        application.send_prompt(command.options)
-
-
 class SendDialogueEvent(haddock.EngineEvent):
     character: str
     line: str
@@ -153,15 +146,6 @@ class DialogueRider(haddock.StateRider[Dialogue]):
         return command
 
 
-class DialogueRenderChief(haddock.RenderChief[DialogueRenderCommand]):
-    command_type = DialogueRenderCommand
-
-    def render(self, command: DialogueRenderCommand, application) -> None:
-        application.send_dialogue(command.character, command.line)
-        haddock.chieftain.mail_event(ReturnDataEvent(None, command.script))
-        haddock.chieftain.mail_event(haddock.PopStateEvent())
-
-
 class SendStoryEvent(haddock.EngineEvent):
     line: str
     script: str
@@ -205,15 +189,6 @@ class StoryRider(haddock.StateRider[Story]):
         command.line = state.line
         command.script = state.script
         return command
-
-
-class StoryRenderChief(haddock.RenderChief[StoryRenderCommand]):
-    command_type = StoryRenderCommand
-
-    def render(self, command: StoryRenderCommand, application) -> None:
-        application.send_story(command.line)
-        haddock.chieftain.mail_event(ReturnDataEvent(None, command.script))
-        haddock.chieftain.mail_event(haddock.PopStateEvent())
 
 
 Block = Tuple[list[ast.stmt], int]
@@ -306,8 +281,4 @@ riders: haddock.Riders = [
     SendStoryEventRider(),
 ]
 
-chiefs: haddock.Chiefs = [
-    PromptRenderChief(),
-    DialogueRenderChief(),
-    StoryRenderChief(),
-]
+chiefs: haddock.Chiefs = []

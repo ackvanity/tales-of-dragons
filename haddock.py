@@ -105,8 +105,12 @@ class Event:
     pass
 
 
-class Application:
-    pass
+class Application(ABC):
+    @abstractmethod
+    def get_mount_point(self) -> object: ...
+
+    @abstractmethod
+    def get_story(self) -> "State | None": ...
 
 
 class RenderCommand:

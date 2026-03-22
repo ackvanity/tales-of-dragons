@@ -1,17 +1,9 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Footer, Header, Label, Button
-from textual.containers import VerticalScroll, VerticalGroup
-from textual.reactive import reactive
+from textual.widgets import Footer, Header
+from textual.containers import VerticalGroup
 import haddock
-from clans.ingerman import fishlegs
-import asyncio
 
-from components.base import EventEmitButton
-from components.ingerman.fishlegs import SatchelItems, SatchelList
 from components.hofferson import Story
-from components.hofferson.astrid import Character
-from components.hofferson.finn import Location
-from components.hofferson import Prompt, Dialogue, Paragraph
 
 
 class TextualApplication(App):
@@ -19,66 +11,29 @@ class TextualApplication(App):
     yield Header()
     yield VerticalGroup(id="application")
     yield Footer()
-  
+
+  def get_mount_point(self):
+    return self.query_one("#application")
+
+  def get_story(self) -> Story | None:
+    children = self.get_mount_point().children
+    if children and isinstance(children[0], Story):
+      return children[0]
+    return None
+
   async def clear_history(self):
-    group = self.query_one("#application")
-    children = list(group.children)
-
-    for child in children:
+    for child in list(self.get_mount_point().children):
       await child.remove()
-  
-  async def ensure_singleton(self, klass: type):
-    group = self.query_one("#application")
-    children = list(group.children)
 
+  async def ensure_singleton(self, klass: type):
+    mount_point = self.get_mount_point()
+    children = list(mount_point.children)
     if len(children) != 1 or type(children[0]) != klass:
       await self.clear_history()
-      await self.query_one("#application").mount(klass())
-
-  async def _send_to_story(self, widget):
-    await self.ensure_singleton(Story)
-    story = self.query_one("#application").children[0]
-    widget.mount_self(story)
-
-  def send_location(self, location):
-    asyncio.create_task(self._send_to_story(Location(location)))
-
-  def send_character(self, character):
-    asyncio.create_task(self._send_to_story(Character(character)))
-  
-  def send_satchel_list(self, satchels):
-      async def x(): 
-        widget = SatchelList(satchels)
-        await self.clear_history()
-        await self.query_one("#application").mount(widget)
-
-      asyncio.create_task(x())
-
-  def send_satchel_items(self, items):
-      async def x(): 
-        widget = SatchelItems(items)
-        await self.clear_history()
-        await self.query_one("#application").mount(widget)
-
-      asyncio.create_task(x())
-  
-  async def _append_to_story(self, node):
-    await self.ensure_singleton(Story)
-    story = self.query_one("#application").children[0]
-    story.nodes.append(node) # type: ignore
-    story.refresh(recompose=True)
-
-  def send_prompt(self, options):
-    prompt = Prompt()
-    for option in options:
-      prompt.options.append(EventEmitButton(option[0], option[1]))
-    asyncio.create_task(self._append_to_story(prompt))
-
-  def send_dialogue(self, character, line):
-    asyncio.create_task(self._append_to_story(Dialogue(character, line)))
-
-  def send_story(self, line):
-    asyncio.create_task(self._append_to_story(Paragraph(line)))
+      await mount_point.mount(klass())
 
   def on_mount(self) -> None:
     haddock.chieftain.mail_event(haddock.TeamAssembled())
+
+
+haddock.Application.register(TextualApplication)

@@ -1,4 +1,4 @@
-from dragonic.interactions import send_dialogue, send_prompt, add_character_hook, add_location_hook, send_story, send_pause
+from dragonic.interactions import send_dialogue, send_prompt, add_character_hook, send_story
 from dragonic.core import world
 
 async def main():
@@ -17,7 +17,7 @@ async def main():
 
     await send_story("The tail creaks. At first you thought it was because it's a prototype. Then it grew louder. And a crack appeared. As quick as thunder the tail bids farewell. You lost grip and crashed on the arid woods of somewhere at Berk.")
 
-    await send_dialogue(await world.player.name, f"Uhhh, where are we?")
+    await send_dialogue(await world.player.name, "Uhhh, where are we?")
 
     await send_story("You'll heroically save Hiccup in due time")
   else:
