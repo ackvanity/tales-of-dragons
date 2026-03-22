@@ -1,32 +1,87 @@
 import haddock
+import json
 from clans.hofferson import astrid
 
-class Item(haddock.Entity):
+class BaseItem(haddock.Entity):
+  name: str
+  description: str
+
+class Item(BaseItem):
   name: str = "Item"
   description: str = "A generic item. Nobody knows what it is useful for..."
 
-class NoItem(Item):
+
+class NoItem(BaseItem):
   name: str = "Emply Slot"
   description: str = "No items here..."
 
+  @property
+  def version(self) -> int:
+    return 1
+  
+  def _serialize(self) -> str:
+    return ""
+
+  @classmethod
+  def _deserialize(cls: type["NoItem"], data: str, version: int) -> "NoItem":
+    return cls()
+
 class Satchel(haddock.Entity):
   owner: haddock.EntityID
-  items: list[Item]
+  items: list[BaseItem]
   capacity: int = 10
 
-  def __init__(self, items: list[Item], capacity: int, owner: haddock.EntityID):
+  def __init__(self, items: list[BaseItem], capacity: int, owner: haddock.EntityID):
     self.items = items
     self.capacity = capacity
     self.owner = owner
 
+  @property
+  def version(self) -> int:
+    return 1
+  
+  def _serialize(self) -> str:
+    data = {}
+    data["owner"] = self.owner.serialize()
+    data["capacity"] = self.capacity
+    data["items"] = [item.serialize() for item in self.items]
+
+    return json.dumps(data)
+  
+  # @classmethod
+  # def _deserialize(cls: type["Satchel"], data: str, version: int) -> "Satchel":
+
 class SatchelsList(haddock.State):
-  pass
+  @property
+  def version(self) -> int:
+    return 1
+  
+  def _serialize(self) -> str:
+    return ""
+
+  @classmethod
+  def _deserialize(cls: type["SatchelsList"], data: str, version: int) -> "SatchelsList":
+    return cls()
 
 class SatchelItems(haddock.State):
   satchel: haddock.EntityID
 
   def __init__(self, satchel: haddock.EntityID):
     self.satchel = satchel
+
+  @property
+  def version(self) -> int:
+    return 1
+  
+  def _serialize(self) -> str:
+    return self.satchel.serialize()
+
+  @classmethod
+  def _deserialize(cls: type["SatchelItems"], data: str, version: int) -> "SatchelItems":
+    if version == 1:
+      return cls(haddock.EntityID.deserialize(data))
+    else:
+       raise haddock.DeserializeVersionUnsupportedException
 
 class SatchelsListRenderCommand(haddock.RenderCommand):
   satchels: list[tuple[str, haddock.Event]]
@@ -36,9 +91,9 @@ class SatchelsListRenderCommand(haddock.RenderCommand):
 
 class SatchelItemsRenderCommand(haddock.RenderCommand):
   title: str
-  items: list[Item]
+  items: list[BaseItem]
 
-  def __init__(self, title: str, items: list[Item]):
+  def __init__(self, title: str, items: list[BaseItem]):
     self.title = title
     self.items = items
 

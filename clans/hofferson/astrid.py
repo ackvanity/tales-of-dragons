@@ -130,8 +130,22 @@ class Human(haddock.Entity):
 class Talking(haddock.State):
     to: str
 
-    def __init__(self, to):
+    @property
+    def version(self) -> int:
+        return 1
+
+    def __init__(self, to: str):
         self.to = to
+
+    def _serialize(self) -> str:
+        return self.to
+    
+    @classmethod
+    def _deserialize(cls: type["Talking"], data: str, version: int) -> "Talking":
+        if version == 1:
+            return cls(data)
+        else:
+            raise haddock.DeserializeVersionUnsupportedException()
 
 
 class TalkingRenderCommand(haddock.RenderCommand):

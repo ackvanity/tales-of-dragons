@@ -91,8 +91,19 @@ class Location(haddock.Entity):
 class Wandering(haddock.State):
     to: str
 
-    def __init__(self, to):
+    def __init__(self, to: str):
         self.to = to
+    
+    @property
+    def version(self) -> int:
+        return 1
+    
+    def _serialize(self) -> str:
+        return self.to
+    
+    @classmethod
+    def _deserialize(cls: type["Wandering"], data: str, version: int) -> "Wandering":
+        return cls(data)
 
 
 class WanderingRenderCommand(haddock.RenderCommand):

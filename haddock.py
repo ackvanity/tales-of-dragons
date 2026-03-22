@@ -2,23 +2,80 @@ from typing import Callable, TypeAlias, TypeVar, Generic, Type
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
+import json
 
+S = TypeVar("S", bound="State")
+E = TypeVar("E", bound="Entity")
+V = TypeVar("V", bound="EngineEvent")
+C = TypeVar("C", bound="RenderCommand")
+R = TypeVar("R", bound="Serializable")
 
-class State:
+class Serializable(ABC):
+    @abstractmethod
     def serialize(self) -> str:
-        return ""
-
-    def deserailize(self, obj: str):
+        pass
+    
+    @classmethod
+    @abstractmethod
+    def deserialize(cls: Type[R], data: str) -> R:
+        pass
+    
+    @staticmethod
+    @abstractmethod
+    def tag() -> str:
         pass
 
-
-class Entity:
-    def serialize(self) -> str:
-        return ""
-
-    def deserailize(self, obj: str):
+class State(ABC, Serializable):
+    @property
+    @abstractmethod
+    def version(self) -> int:
         pass
 
+    @abstractmethod
+    def _serialize(self) -> str:
+        return ""
+
+    @classmethod
+    @abstractmethod
+    def _deserialize(cls: Type[S], data: str, version: int) -> S:
+        pass
+
+    def serialize(self) -> str:
+        return json.dumps([self.version, self._serialize()])
+    
+    @classmethod
+    def deserialize(cls: Type[S], data: str) -> S:
+        obj = json.loads(data)
+        return cls._deserialize(obj[1], obj[0])
+
+
+class Entity(ABC):
+    @property
+    @abstractmethod
+    def version(self) -> int:
+        pass
+
+    @abstractmethod
+    def _serialize(self) -> str:
+        return ""
+    
+    @staticmethod
+    @abstractmethod
+    def tag() -> str:
+        pass
+
+    @classmethod
+    @abstractmethod
+    def _deserialize(cls: Type[E], data: str, version: int) -> E:
+        pass
+
+    def serialize(self) -> str:
+        return json.dumps([self.version, self._serialize()])
+    
+    @classmethod
+    def deserialize(cls: Type[E], data: str) -> E:
+        obj = json.loads(data)
+        return cls._deserialize(obj[1], obj[0])
 
 @dataclass(frozen=True)
 class EntityID:
@@ -29,6 +86,14 @@ class EntityID:
     def __str__(self):
         return f"|Clan: {self.clan}|Species: {self.species}|Name: {self.name}|"
 
+    def serialize(self) -> str:
+        return json.dumps([self.clan, self.species, self.name])
+
+    @classmethod
+    def deserialize(cls, data: str) -> "EntityID":
+        lst = json.loads(data)
+        id = cls(lst[0], lst[1], lst[2])
+        return id
 
 class Event:
     pass
@@ -45,6 +110,13 @@ class RenderCommand:
 class RenderingException(Exception):
     pass
 
+# Errors while deserializing
+class DeserializeException(Exception):
+    pass
+
+# The serialized save version cannot be deserialized
+class DeserializeVersionUnsupportedException(DeserializeException):
+    pass
 
 # Events to be handled by event riders and/or the Haddocks
 class EngineEvent(Event):
@@ -67,12 +139,6 @@ class HaddockEvent(Event):
 # Mailed when the engine is running
 class TeamAssmebled(HaddockEvent):
     pass
-
-
-S = TypeVar("S", bound=State)
-E = TypeVar("E", bound=Entity)
-V = TypeVar("V", bound=EngineEvent)
-C = TypeVar("C", bound=RenderCommand)
 
 
 class StateRider(Generic[S], ABC):
@@ -127,25 +193,23 @@ class EventSeries(EngineEvent):
         self.events = events
 
 class Hiccup:
-    states: list[State] = []
-    entities: dict[EntityID, Entity] = {}
-
-    event_queue: deque[Event] = deque()
-
-    render_chiefs: list[RenderChief] = []
-
-    # Non-engine event handlers are set per *entity/state type* and not per *event type*
-    state_riders: list[StateRider] = []
-    entity_riders: list[EntityRider] = []
-    # Global/engine/module events
-    event_riders: list[EventRider] = []
-
-    application: object = None
-
-    _in_event_loop: bool = False
-
     def __init__(self):
-        pass
+        self.states: list[State] = []
+        self.entities: dict[EntityID, Entity] = {}
+
+        self.event_queue: deque[Event] = deque()
+
+        self.render_chiefs: list[RenderChief] = []
+
+        # Non-engine event handlers are set per *entity/state type* and not per *event type*
+        self.state_riders: list[StateRider] = []
+        self.entity_riders: list[EntityRider] = []
+        # Global/engine/module events
+        self.event_riders: list[EventRider] = []
+
+        self.application: object = None
+
+        self._in_event_loop: bool = False
 
     def render(self):
         if not len(self.states):
