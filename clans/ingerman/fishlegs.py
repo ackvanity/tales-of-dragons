@@ -23,10 +23,17 @@ class BaseItem(haddock.Entity):
     Subclasses must set name and description as class attributes or
     instance attributes, and implement the full Entity serialization
     interface (version, _serialize, _deserialize, tag).
+
+    serialize() is overridden here to include the tag so that the item
+    type registry can reconstruct the correct subclass on deserialization.
     """
 
     name: str
     description: str
+
+    def serialize(self) -> haddock.JSONValue:
+        """Return {"tag": ..., "payload": [version, _serialize()]} for type-tagged storage."""
+        return {"tag": self.tag(), "payload": [self.version, self._serialize()]}
 
 
 class Item(BaseItem):
@@ -113,18 +120,22 @@ class Satchel(haddock.Entity):
         return 1
 
     def _serialize(self) -> haddock.JSONValue:
-        """Serialize owner and capacity only. Items contain custom Entity subclasses
-        and are skipped until item serialization is implemented."""
         return {
             "owner": self.owner.serialize(),
             "capacity": self.capacity,
+            "items": [item.serialize() for item in self.items],
         }
 
     @classmethod
     def _deserialize(cls: type["Satchel"], data: haddock.JSONValue, version: int) -> "Satchel":
-        """Not yet implemented — items list contains BaseItem subclasses that require
-        a type registry to deserialize. Implement once item serialization is in place."""
-        raise NotImplementedError("Satchel deserialization is not yet implemented")
+        if version == 1:
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for Satchel, got {data!r}")
+            owner = haddock.EntityID.deserialize(data["owner"])
+            capacity = data["capacity"]
+            items = [_deserialize_item(i) for i in data["items"]]  # type: ignore
+            return cls(items, capacity, owner)  # type: ignore
+        raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
     def tag() -> str:
@@ -242,6 +253,10 @@ class SatchelItemsRenderCommand(haddock.RenderCommand):
 class OpenSatchelsEvent(haddock.EngineEvent):
     """Open the satchel list screen. Fired by the "Check satchel" action."""
 
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.OpenSatchelsEvent"
+
 
 class OpenSatchelItemsEvent(haddock.EngineEvent):
     """Open the items view for a specific satchel."""
@@ -347,6 +362,38 @@ open_satchels_action = Action(
 extra_character_actions: list[Action] = [open_satchels_action]
 """Actions contributed by this module to every NPC dialogue menu."""
 
+# ---------------------------------------------------------------------------
+# Item type registry
+# ---------------------------------------------------------------------------
+
+_ITEM_REGISTRY: dict[str, type[BaseItem]] = {}
+"""Maps item tag strings to BaseItem subclasses for deserialization."""
+
+
+def _register_item(cls: type[BaseItem]) -> None:
+    """Register a BaseItem subclass so it can be reconstructed by tag."""
+    _ITEM_REGISTRY[cls.tag()] = cls
+
+
+def _deserialize_item(data: haddock.JSONValue) -> BaseItem:
+    """Reconstruct a BaseItem from its tagged serialized form.
+
+    Expects {"tag": str, "payload": [version, inner_payload]}.
+    Selects the correct subclass by tag, then calls its deserialize().
+    """
+    if not isinstance(data, dict) or "tag" not in data:
+        raise haddock.DeserializeException(f"Expected dict with 'tag' for item, got {data!r}")
+    tag = data["tag"]
+    cls = _ITEM_REGISTRY.get(tag)  # type: ignore
+    if cls is None:
+        raise haddock.DeserializeException(f"Unknown item tag: {tag!r}")
+    return cls.deserialize(data["payload"])  # type: ignore — delegates to Entity.deserialize()
+
+
+_register_item(Item)
+_register_item(NoItem)
+
+
 riders: haddock.Riders = [
     SatchelsListRider(),
     SatchelItemsRider(),
@@ -354,3 +401,6 @@ riders: haddock.Riders = [
     OpenSatchelItemsEventRider(),
 ]
 chiefs: haddock.Chiefs = []
+
+# Register all events that appear as Action.signal or inside EventSeries
+haddock.register_event(OpenSatchelsEvent)

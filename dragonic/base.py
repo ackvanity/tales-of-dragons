@@ -56,7 +56,11 @@ class Attr(Segment):
 KeyLike = int | bool | str | haddock.EntityID
 """Valid key types for Item path segments."""
 
-ValueLike = haddock.EntityID | haddock.Entity | haddock.State | haddock.JSONValue
+# Import here to avoid circular imports — dragonic.interactions imports haddock,
+# haddock does not import dragonic, so this direction is safe.
+from dragonic.interactions import DialogueResult as _DialogueResult
+
+ValueLike = haddock.EntityID | haddock.Entity | haddock.State | haddock.JSONValue | _DialogueResult
 """Valid value types that can flow through the Dragonic data stream."""
 
 

@@ -47,6 +47,19 @@ class HumanInteractEngineEvent(HumanInteractEventBase, haddock.EngineEvent):
     from a location menu, or when a quest directly triggers an interaction.
     """
 
+    @staticmethod
+    def tag() -> str:
+        return "hofferson.HumanInteractEngineEvent"
+
+    def _serialize_payload(self) -> haddock.JSONValue:
+        return self.to
+
+    @classmethod
+    def deserialize(cls, data: haddock.JSONValue) -> "HumanInteractEngineEvent":  # type: ignore
+        if not isinstance(data, str):
+            raise haddock.DeserializeException(f"Expected str for HumanInteractEngineEvent, got {data!r}")
+        return cls(data)
+
 
 class HumanInteractEvent(HumanInteractEventBase, haddock.Event):
     """
@@ -113,6 +126,19 @@ class RemoveDialogueEvent(haddock.Event):
         self.character = character
         self.id = id
 
+    @staticmethod
+    def tag() -> str:
+        return "hofferson.RemoveDialogueEvent"
+
+    def _serialize_payload(self) -> haddock.JSONValue:
+        return {"character": self.character, "id": self.id}
+
+    @classmethod
+    def deserialize(cls, data: haddock.JSONValue) -> "RemoveDialogueEvent":  # type: ignore
+        if not isinstance(data, dict):
+            raise haddock.DeserializeException(f"Expected dict for RemoveDialogueEvent, got {data!r}")
+        return cls(data["character"], data["id"])  # type: ignore
+
 
 # ---------------------------------------------------------------------------
 # Entities
@@ -152,13 +178,12 @@ class Human(haddock.Entity):
         return 1
 
     def _serialize(self) -> haddock.JSONValue:
-        """Persist primitive fields only. extra_character_actions is always empty at rest
-        (quest hooks are re-injected on replay) so it is not serialized."""
         return {
             "id": self.id,
             "name": self.name,
             "health": self.health,
             "location": self.location,
+            "extra_character_actions": [a.serialize() for a in self.extra_character_actions],
         }
 
     @classmethod
@@ -166,9 +191,12 @@ class Human(haddock.Entity):
         if version == 1:
             if not isinstance(data, dict):
                 raise haddock.DeserializeException(f"Expected dict for Human, got {data!r}")
-            obj = cls(data["id"])  # type: ignore  # loads defaults from JSON file
+            obj = cls(data["id"])  # type: ignore
             obj.health = data["health"]  # type: ignore
             obj.location = data["location"]  # type: ignore
+            obj.extra_character_actions = [
+                Action.deserialize(a) for a in data.get("extra_character_actions", [])  # type: ignore
+            ]
             return obj
         raise haddock.DeserializeVersionUnsupportedException()
 
@@ -351,3 +379,7 @@ def get_human(name: str) -> Human:
 
 riders: haddock.Riders = [HumanRider(), TalkingRider(), HumanInteractRider(), AddDialogueEventRider()]
 chiefs: haddock.Chiefs = []
+
+# Register all events that appear as Action.signal or inside EventSeries
+haddock.register_event(HumanInteractEngineEvent)
+haddock.register_event(RemoveDialogueEvent)

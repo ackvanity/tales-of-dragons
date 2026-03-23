@@ -10,7 +10,8 @@ Quest scripts import from this module:
     from dragonic.interactions import send_dialogue, send_prompt, ...
 """
 
-from typing import List
+from typing import List, Type
+import haddock
 from dragonic.base import Syscall
 
 
@@ -59,9 +60,11 @@ class AddCharacterHookSyscall(StorySyscall):
 # Result types
 # ---------------------------------------------------------------------------
 
-class DialogueResult:
+class DialogueResult(haddock.Serializable):
     """
     The result returned from send_prompt().
+
+    Serializable so it can be stored in DragonicQuest.data_stream.
 
     Attributes:
         index: Zero-based index of the option the player selected.
@@ -71,11 +74,22 @@ class DialogueResult:
     index: int
     text: str
 
-    def __init__(self, index: int | None = None, text: str | None = None) -> None:
-        if index is not None:
-            self.index = index  # type: ignore
-        if text is not None:
-            self.text = text  # type: ignore
+    def __init__(self, index: int, text: str) -> None:
+        self.index = index
+        self.text = text
+
+    @staticmethod
+    def tag() -> str:
+        return "dragonic.DialogueResult"
+
+    def serialize(self) -> haddock.JSONValue:
+        return {"index": self.index, "text": self.text}
+
+    @classmethod
+    def deserialize(cls: Type["DialogueResult"], data: haddock.JSONValue) -> "DialogueResult":
+        if not isinstance(data, dict):
+            raise haddock.DeserializeException(f"Expected dict for DialogueResult, got {data!r}")
+        return cls(index=data["index"], text=data["text"])  # type: ignore
 
 
 # ---------------------------------------------------------------------------

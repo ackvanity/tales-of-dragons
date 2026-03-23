@@ -197,12 +197,38 @@ class EntityID(Serializable):
 # Events
 # ---------------------------------------------------------------------------
 
-class Event:
+class Event(Serializable):
     """
     Base class for all game events.
 
     Plain Events are broadcast to EntityRiders and the active StateRider.
+
+    Implements Serializable so that Event instances stored as Action.signal
+    can be persisted. Subclasses that are never stored may leave the defaults.
+    Override serialize() / deserialize() / tag() in any Event subclass that
+    appears as an Action.signal or is otherwise persisted.
     """
+
+    def _serialize_payload(self) -> JSONValue:
+        """Subclasses override this to provide their payload. Default: empty dict."""
+        return {}
+
+    def serialize(self) -> JSONValue:
+        """Return {"tag": ..., "payload": ...} envelope for storage."""
+        return {"tag": self.tag(), "payload": self._serialize_payload()}
+
+    @classmethod
+    def deserialize(cls: Type[R], data: JSONValue) -> R:
+        """
+        Reconstruct from a payload dict (not the full envelope).
+        Called by deserialize_event() which has already stripped the tag.
+        Default: stateless, construct with no args.
+        """
+        return cls()  # type: ignore
+
+    @staticmethod
+    def tag() -> str:
+        return "haddock.Event"
 
 
 class EngineEvent(Event):
@@ -213,9 +239,17 @@ class EngineEvent(Event):
     trigger narrative sequences) rather than for in-world interactions.
     """
 
+    @staticmethod
+    def tag() -> str:
+        return "haddock.EngineEvent"
+
 
 class PopStateEvent(EngineEvent):
     """Remove the top state from Hiccup's state stack."""
+
+    @staticmethod
+    def tag() -> str:
+        return "haddock.PopStateEvent"
 
 
 class AppendStateEvent(EngineEvent):
@@ -230,6 +264,10 @@ class AppendStateEvent(EngineEvent):
 class HaddockEvent(Event):
     """Events emitted by the engine itself (not by game logic)."""
 
+    @staticmethod
+    def tag() -> str:
+        return "haddock.HaddockEvent"
+
 
 class TeamAssembled(HaddockEvent):
     """
@@ -238,6 +276,10 @@ class TeamAssembled(HaddockEvent):
     DragonicQuests listen for this event to start their coroutines on
     the first frame.
     """
+
+    @staticmethod
+    def tag() -> str:
+        return "haddock.TeamAssembled"
 
 
 class EventSeries(EngineEvent):
@@ -255,6 +297,19 @@ class EventSeries(EngineEvent):
 
     def __init__(self, events: list[Event] | None = None) -> None:
         self.events = events if events is not None else []
+
+    @staticmethod
+    def tag() -> str:
+        return "haddock.EventSeries"
+
+    def _serialize_payload(self) -> JSONValue:
+        return [e.serialize() for e in self.events]
+
+    @classmethod
+    def deserialize(cls: Type["EventSeries"], data: JSONValue) -> "EventSeries":  # type: ignore
+        if not isinstance(data, list):
+            raise DeserializeException(f"Expected list for EventSeries, got {data!r}")
+        return cls([deserialize_event(item) for item in data])
 
 
 # ---------------------------------------------------------------------------
@@ -646,6 +701,53 @@ Riders: TypeAlias = list[EventRider | StateRider | EntityRider]
 
 Chiefs: TypeAlias = list[RenderChief]
 """Type alias for the chiefs list exported by each clan module."""
+
+# ---------------------------------------------------------------------------
+# Event type registry
+# ---------------------------------------------------------------------------
+
+_EVENT_REGISTRY: dict[str, type[Event]] = {}
+"""Maps tag strings to Event subclasses for deserialization."""
+
+
+def register_event(cls: type[Event]) -> None:
+    """
+    Register an Event subclass in the global event registry.
+
+    Must be called for every Event subclass that can appear as an
+    Action.signal or inside an EventSeries.  Call once at module level,
+    after the class is defined.
+    """
+    _EVENT_REGISTRY[cls.tag()] = cls
+
+
+def deserialize_event(data: JSONValue) -> Event:
+    """
+    Reconstruct an Event from its serialized form.
+
+    Expects data to be a dict with a "tag" key whose value matches a
+    registered Event subclass, plus an optional "payload" key.
+
+    Raises DeserializeException if the tag is unknown or data is malformed.
+    """
+    if not isinstance(data, dict):
+        raise DeserializeException(f"Expected dict for event, got {data!r}")
+    tag = data.get("tag")
+    if not isinstance(tag, str):
+        raise DeserializeException(f"Event dict missing 'tag': {data!r}")
+    cls = _EVENT_REGISTRY.get(tag)
+    if cls is None:
+        raise DeserializeException(f"Unknown event tag: {tag!r}")
+    return cls.deserialize(data.get("payload", {}))  # type: ignore
+
+
+# Register built-in serializable events
+register_event(Event)
+register_event(EngineEvent)
+register_event(PopStateEvent)
+register_event(HaddockEvent)
+register_event(TeamAssembled)
+register_event(EventSeries)
 
 chieftain: Hiccup = None  # type: ignore
 """

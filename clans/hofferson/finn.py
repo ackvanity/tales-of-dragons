@@ -52,6 +52,19 @@ class LocationTeleportEngineEvent(LocationTeleportEventBase, haddock.EngineEvent
     (parsed from data/location/ JSON) or directly by quest scripts.
     """
 
+    @staticmethod
+    def tag() -> str:
+        return "hofferson.LocationTeleportEngineEvent"
+
+    def _serialize_payload(self) -> haddock.JSONValue:
+        return self.to
+
+    @classmethod
+    def deserialize(cls, data: haddock.JSONValue) -> "LocationTeleportEngineEvent":  # type: ignore
+        if not isinstance(data, str):
+            raise haddock.DeserializeException(f"Expected str for LocationTeleportEngineEvent, got {data!r}")
+        return cls(data)
+
 
 class LocationTeleportEvent(LocationTeleportEventBase, haddock.Event):
     """
@@ -95,15 +108,21 @@ class Location(haddock.Entity):
         return 1
 
     def _serialize(self) -> haddock.JSONValue:
-        """Only id is persistent. extra_location_actions is always empty at rest."""
-        return self.id
+        return {
+            "id": self.id,
+            "extra_location_actions": [a.serialize() for a in self.extra_location_actions],
+        }
 
     @classmethod
     def _deserialize(cls: type["Location"], data: haddock.JSONValue, version: int) -> "Location":
         if version == 1:
-            if not isinstance(data, str):
-                raise haddock.DeserializeException(f"Expected str for Location.id, got {data!r}")
-            return cls(data)
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for Location, got {data!r}")
+            obj = cls(data["id"])  # type: ignore
+            obj.extra_location_actions = [
+                Action.deserialize(a) for a in data.get("extra_location_actions", [])  # type: ignore
+            ]
+            return obj
         raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
@@ -268,3 +287,6 @@ def get_location(id: str) -> Location:
 
 riders: haddock.Riders = [LocationRider(), WanderingRider(), LocationTeleportRider()]
 chiefs: haddock.Chiefs = []
+
+# Register all events that appear as Action.signal or inside EventSeries
+haddock.register_event(LocationTeleportEngineEvent)

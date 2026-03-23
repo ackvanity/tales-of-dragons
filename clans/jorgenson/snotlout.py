@@ -90,16 +90,51 @@ class ReturnDataEvent(haddock.Event):
     story dismiss) to resume the quest coroutine with the result.
 
     Attributes:
-        data:   The value to send into the coroutine (e.g. DialogueResult or None).
+        data:   The value to send into the coroutine. Either None,
+                a plain JSONValue, or a DialogueResult.
         script: The quest ID this return belongs to.
     """
 
-    data: haddock.JSONValue
+    data: haddock.JSONValue | dragonic.interactions.DialogueResult
     script: str
 
-    def __init__(self, data: haddock.JSONValue, script: str) -> None:
+    def __init__(
+        self,
+        data: "haddock.JSONValue | dragonic.interactions.DialogueResult",
+        script: str,
+    ) -> None:
         self.data = data
         self.script = script
+
+    @staticmethod
+    def tag() -> str:
+        return "jorgenson.ReturnDataEvent"
+
+    def _serialize_payload(self) -> haddock.JSONValue:
+        if self.data is None:
+            payload: haddock.JSONValue = {"type": "null"}
+        elif isinstance(self.data, dragonic.interactions.DialogueResult):
+            payload = {"type": "dialogue_result", "value": self.data.serialize()}
+        else:
+            payload = {"type": "json", "value": self.data}
+        return {"data": payload, "script": self.script}
+
+    @classmethod
+    def deserialize(cls, data: haddock.JSONValue) -> "ReturnDataEvent":  # type: ignore
+        if not isinstance(data, dict):
+            raise haddock.DeserializeException(f"Expected dict for ReturnDataEvent, got {data!r}")
+        script = data["script"]
+        raw = data["data"]
+        if not isinstance(raw, dict):
+            raise haddock.DeserializeException(f"Expected dict for ReturnDataEvent.data, got {raw!r}")
+        kind = raw["type"]
+        if kind == "null":
+            value: haddock.JSONValue | dragonic.interactions.DialogueResult = None
+        elif kind == "dialogue_result":
+            value = dragonic.interactions.DialogueResult.deserialize(raw["value"])
+        else:
+            value = raw["value"]
+        return cls(value, script)  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -476,16 +511,44 @@ class DragonicQuest(haddock.Entity):
         return 1
 
     def _serialize(self) -> haddock.JSONValue:
-        """Persist the quest id only. data_stream contains DialogueResult objects
-        which are not yet JSON-serializable; full replay serialization is deferred."""
-        return self.id
+        """Serialize the quest id and the full data_stream for replay.
+
+        Each stream entry is tagged by type:
+          {"type": "null"}                              — None (auto-advance)
+          {"type": "dialogue_result", "value": {...}}  — player choice
+          {"type": "json", "value": ...}               — other JSON value
+        """
+        stream: list[haddock.JSONValue] = []
+        for entry in self.data_stream:
+            if entry is None:
+                stream.append({"type": "null"})
+            elif isinstance(entry, dragonic.interactions.DialogueResult):
+                stream.append({"type": "dialogue_result", "value": entry.serialize()})
+            else:
+                stream.append({"type": "json", "value": entry})  # type: ignore
+        return {"id": self.id, "data_stream": stream}
 
     @classmethod
     def _deserialize(cls: type["DragonicQuest"], data: haddock.JSONValue, version: int) -> "DragonicQuest":
         if version == 1:
-            if not isinstance(data, str):
-                raise haddock.DeserializeException(f"Expected str for DragonicQuest.id, got {data!r}")
-            return cls(data)  # type: ignore
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for DragonicQuest, got {data!r}")
+            quest_id = data["id"]
+            raw_stream = data["data_stream"]
+            if not isinstance(raw_stream, list):
+                raise haddock.DeserializeException(f"Expected list for data_stream, got {raw_stream!r}")
+            stream: list[dragonic.base.ValueLike] = []
+            for entry in raw_stream:
+                if not isinstance(entry, dict):
+                    raise haddock.DeserializeException(f"Expected dict in data_stream, got {entry!r}")
+                kind = entry["type"]
+                if kind == "null":
+                    stream.append(None)  # type: ignore
+                elif kind == "dialogue_result":
+                    stream.append(dragonic.interactions.DialogueResult.deserialize(entry["value"]))
+                else:
+                    stream.append(entry["value"])  # type: ignore
+            return cls(quest_id, stream)  # type: ignore
         raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
@@ -592,3 +655,6 @@ riders: haddock.Riders = [
 ]
 
 chiefs: haddock.Chiefs = []
+
+# Register all events that appear as Action.signal or inside EventSeries
+haddock.register_event(ReturnDataEvent)
