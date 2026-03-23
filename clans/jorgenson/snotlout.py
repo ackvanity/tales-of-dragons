@@ -42,10 +42,28 @@ class Player(haddock.Entity):
     """
 
     name: str
-    health: int = 100
+    health: int
 
     def __init__(self, name: str) -> None:
         self.name = name
+        self.health = 100
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return {"name": self.name, "health": self.health}
+
+    @classmethod
+    def _deserialize(cls: type["Player"], data: haddock.JSONValue, version: int) -> "Player":
+        if version == 1:
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for Player, got {data!r}")
+            obj = cls(data["name"])  # type: ignore
+            obj.health = data["health"]  # type: ignore
+            return obj
+        raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
     def tag() -> str:
@@ -155,6 +173,23 @@ class Prompt(haddock.State):
         self.options = options if options is not None else []
         self.script = script  # type: ignore
 
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        """Persist script only. Options contain Event objects and are reconstructed
+        by the quest coroutine on replay."""
+        return self.script
+
+    @classmethod
+    def _deserialize(cls: type["Prompt"], data: haddock.JSONValue, version: int) -> "Prompt":
+        if version == 1:
+            if not isinstance(data, str):
+                raise haddock.DeserializeException(f"Expected str for Prompt.script, got {data!r}")
+            return cls(options=None, script=data)
+        raise haddock.DeserializeVersionUnsupportedException()
+
     @staticmethod
     def tag() -> str:
         return "jorgenson.Prompt"
@@ -230,6 +265,21 @@ class Dialogue(haddock.State):
         self.line = line
         self.script = script
 
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return {"character": self.character, "line": self.line, "script": self.script}
+
+    @classmethod
+    def _deserialize(cls: type["Dialogue"], data: haddock.JSONValue, version: int) -> "Dialogue":
+        if version == 1:
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for Dialogue, got {data!r}")
+            return cls(data["character"], data["line"], data["script"])  # type: ignore
+        raise haddock.DeserializeVersionUnsupportedException()
+
     @staticmethod
     def tag() -> str:
         return "jorgenson.Dialogue"
@@ -304,6 +354,21 @@ class Story(haddock.State):
         self.line = line
         self.script = script
 
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return {"line": self.line, "script": self.script}
+
+    @classmethod
+    def _deserialize(cls: type["Story"], data: haddock.JSONValue, version: int) -> "Story":
+        if version == 1:
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for Story, got {data!r}")
+            return cls(data["line"], data["script"])  # type: ignore
+        raise haddock.DeserializeVersionUnsupportedException()
+
     @staticmethod
     def tag() -> str:
         return "jorgenson.Story"
@@ -350,6 +415,17 @@ class DragonicState(haddock.State):
     block_stack: List[Block]
     globals: dict
 
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        raise NotImplementedError("DragonicState serialization is not yet implemented")
+
+    @classmethod
+    def _deserialize(cls: type["DragonicState"], data: haddock.JSONValue, version: int) -> "DragonicState":
+        raise NotImplementedError("DragonicState deserialization is not yet implemented")
+
     @staticmethod
     def tag() -> str:
         return "jorgenson.DragonicState"
@@ -384,16 +460,33 @@ class DragonicQuest(haddock.Entity):
         id: str,
         data_stream: List[dragonic.base.ValueLike] | None = None,
     ) -> None:
-        source = librarians.core.get_data(["quest", id], "py", False)
+        source = librarians.core.get_data(["quest", id], "py", False)  # type: ignore
         self.id = id
         self.data_stream = data_stream if data_stream is not None else []
 
         namespace: dict = {}
-        exec(source, namespace)
+        exec(source, namespace)  # type: ignore
         self.coro = namespace["main"]()
 
         for data in self.data_stream:
             self.step(data, dispatch_events=False)
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        """Persist the quest id only. data_stream contains DialogueResult objects
+        which are not yet JSON-serializable; full replay serialization is deferred."""
+        return self.id
+
+    @classmethod
+    def _deserialize(cls: type["DragonicQuest"], data: haddock.JSONValue, version: int) -> "DragonicQuest":
+        if version == 1:
+            if not isinstance(data, str):
+                raise haddock.DeserializeException(f"Expected str for DragonicQuest.id, got {data!r}")
+            return cls(data)  # type: ignore
+        raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
     def tag() -> str:

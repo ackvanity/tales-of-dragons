@@ -91,6 +91,26 @@ class Location(haddock.Entity):
         self.id = id
 
     @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        """Only id is persistent. extra_location_actions is always empty at rest."""
+        return self.id
+
+    @classmethod
+    def _deserialize(cls: type["Location"], data: haddock.JSONValue, version: int) -> "Location":
+        if version == 1:
+            if not isinstance(data, str):
+                raise haddock.DeserializeException(f"Expected str for Location.id, got {data!r}")
+            return cls(data)
+        raise haddock.DeserializeVersionUnsupportedException()
+
+    @staticmethod
+    def tag() -> str:
+        return "hofferson.Location"
+
+    @property
     def actions(self) -> list[Action]:
         """
         Build the full action list for this location.

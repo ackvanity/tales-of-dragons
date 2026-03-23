@@ -28,16 +28,27 @@ class BaseItem(haddock.Entity):
     name: str
     description: str
 
-    def serialize(self) -> haddock.JSONValue:
-        """Placeholder — subclasses must implement _serialize instead."""
-        raise NotImplementedError
-
 
 class Item(BaseItem):
     """A generic placeholder item with no special behaviour."""
 
     name: str = "Item"
     description: str = "A generic item. Nobody knows what it is useful for..."
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return ""
+
+    @classmethod
+    def _deserialize(cls: type["Item"], data: haddock.JSONValue, version: int) -> "Item":
+        return cls()
+
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.Item"
 
 
 class NoItem(BaseItem):
@@ -102,15 +113,18 @@ class Satchel(haddock.Entity):
         return 1
 
     def _serialize(self) -> haddock.JSONValue:
+        """Serialize owner and capacity only. Items contain custom Entity subclasses
+        and are skipped until item serialization is implemented."""
         return {
             "owner": self.owner.serialize(),
             "capacity": self.capacity,
-            "items": [item.serialize() for item in self.items],
         }
 
-    # _deserialize is not yet implemented — see TODO
-    # @classmethod
-    # def _deserialize(cls: type["Satchel"], data: haddock.JSONValue, version: int) -> "Satchel":
+    @classmethod
+    def _deserialize(cls: type["Satchel"], data: haddock.JSONValue, version: int) -> "Satchel":
+        """Not yet implemented — items list contains BaseItem subclasses that require
+        a type registry to deserialize. Implement once item serialization is in place."""
+        raise NotImplementedError("Satchel deserialization is not yet implemented")
 
     @staticmethod
     def tag() -> str:

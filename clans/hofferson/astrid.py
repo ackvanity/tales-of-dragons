@@ -135,7 +135,7 @@ class Human(haddock.Entity):
 
     id: str
     name: str
-    health: int = 100
+    health: int
     location: str
     extra_character_actions: list[Action]
 
@@ -146,6 +146,35 @@ class Human(haddock.Entity):
         self.location = data.variables.location
         self.name = data.name
         self.extra_character_actions = []
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        """Persist primitive fields only. extra_character_actions is always empty at rest
+        (quest hooks are re-injected on replay) so it is not serialized."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "health": self.health,
+            "location": self.location,
+        }
+
+    @classmethod
+    def _deserialize(cls: type["Human"], data: haddock.JSONValue, version: int) -> "Human":
+        if version == 1:
+            if not isinstance(data, dict):
+                raise haddock.DeserializeException(f"Expected dict for Human, got {data!r}")
+            obj = cls(data["id"])  # type: ignore  # loads defaults from JSON file
+            obj.health = data["health"]  # type: ignore
+            obj.location = data["location"]  # type: ignore
+            return obj
+        raise haddock.DeserializeVersionUnsupportedException()
+
+    @staticmethod
+    def tag() -> str:
+        return "hofferson.Human"
 
     @property
     def actions(self) -> list[Action]:
