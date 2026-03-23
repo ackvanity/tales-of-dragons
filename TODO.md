@@ -27,9 +27,7 @@
 - [ ] `SatchelsList` / `SatchelsListRider` / `SatchelsListRenderCommand` — plural possessive ("Satchels") is inconsistent with `SatchelItems` / `SatchelItemsRider`. Should be `SatchelList` throughout (matches the component widget name already)
 - [ ] `BaseAddDialogueEvent` — the "Base" prefix is confusing; it's not an ABC, it's the non-engine variant of `AddDialogueEvent`. Rename to `AddDialogueNonEngineEvent` or restructure to use a single event type
 - [ ] `HumanInteractEvent` / `HumanInteractEngineEvent` — the "Base" mixin `HumanInteractEventBase` uses a different naming pattern from `LocationTeleportEventBase`. One uses `EventBase`, the other is identical. Consistent pattern needed
-- [ ] `extra_lines` on `Human` — stores injected `Action` objects but is named `lines` implying strings. Rename to `extra_actions` to match `Location.extra_actions`
-- [ ] `extra_character_actions` (in modules/fishlegs) vs `extra_actions` (on `Location`) — the module injection attribute is named differently from the entity storage attribute. Pick one convention: `extra_actions` everywhere
-- [ ] `WanderingRenderCommand.line` — field named `line` holds the ambient description string. Should be `ambient` to match what `Location.ambient` produces and what the render dict key already calls it
+
 - [ ] `roll_call` — the event handler method on all riders. Evocative name but not obvious to new readers; worth a comment or rename to `handle_event` / `on_event` when the API stabilises
 - [ ] `mail_event` / `TeamAssembled` / `declare_chief` / `enroll_rider` — all thematic Viking names on `Hiccup`. Fine as-is, but if the codebase ever needs to separate the theme from the API, these would all need updating together
 - [ ] `clans/ingerman/fishlegs.py` exports `open_satchels_action` as a module-level singleton — naming convention for module-level action singletons is not yet established (everything else uses class names). Consider a consistent pattern e.g. `OPEN_SATCHELS_ACTION` (SCREAMING_SNAKE for constants) or wrap in a proper `module` object per the planned `register_module()` refactor

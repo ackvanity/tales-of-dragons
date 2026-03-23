@@ -74,7 +74,7 @@ class Human(haddock.Entity):
     health: int = 100
     location: str
 
-    extra_lines: list[Action]
+    extra_character_actions: list[Action]
 
     def __init__(self, id):
         self.id = id
@@ -87,7 +87,7 @@ class Human(haddock.Entity):
         self.name = astrid.parse_character_data(
             core.get_data(f"character/human/{id}")
         ).name
-        self.extra_lines = []
+        self.extra_character_actions = []
 
     @property
     def actions(self) -> list[Action]:
@@ -145,13 +145,13 @@ class HumanRider(haddock.EntityRider[Human]):
             print(f"Trying to add a line to {event.character} - now at {entity.id}")
         if isinstance(event, BaseAddDialogueEvent) and event.character == entity.id:
             print("Adding line!")
-            entity.extra_lines.append(Action(
+            entity.extra_character_actions.append(Action(
                 line=event.line,
                 signal=event.event,
                 id=event.id,
             ))
         if isinstance(event, RemoveDialogueEvent) and event.character == entity.id:
-            entity.extra_lines = [a for a in entity.extra_lines if a.id != event.id]
+            entity.extra_character_actions = [a for a in entity.extra_character_actions if a.id != event.id]
 
 
 class TalkingRider(haddock.StateRider[Talking]):
@@ -167,7 +167,7 @@ class TalkingRider(haddock.StateRider[Talking]):
 
         actions: list[Action] = []
         actions += character.actions
-        actions += character.extra_lines
+        actions += character.extra_character_actions
         for module in modules:
             actions += module.extra_character_actions
 

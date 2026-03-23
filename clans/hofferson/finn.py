@@ -32,15 +32,15 @@ class LocationTeleportRider(haddock.EventRider[LocationTeleportEngineEvent]):
 
 
 class Location(haddock.Entity):
-    extra_actions: list[Action]
+    extra_location_actions: list[Action]
 
     def __init__(self, id):
-        self.extra_actions = []
+        self.extra_location_actions = []
         self.id = id
 
     @property
     def actions(self) -> list[Action]:
-        action_list: list[Action] = list(self.extra_actions)
+        action_list: list[Action] = list(self.extra_location_actions)
         for action in librarian.parse_location_data(core.get_data(f"location/{self.id}")).actions:
             action_list.append(Action(
                 line=action.line,
@@ -82,12 +82,12 @@ class Wandering(haddock.State):
 
 class WanderingRenderCommand(haddock.RenderCommand):
     id: str
-    line: str
+    ambient: str
     actions: list[Action]
 
-    def __init__(self, id: str, line: str, actions: list[Action]):
+    def __init__(self, id: str, ambient: str, actions: list[Action]):
         self.id = id
-        self.line = line
+        self.ambient = ambient
         self.actions = actions
 
 

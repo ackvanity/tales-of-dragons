@@ -9,7 +9,7 @@ from stoick import TextualApplication
 class Location:
   def __init__(self, command: WanderingRenderCommand):
     self.location_id = command.id
-    self.location_ambient = command.line
+    self.location_ambient = command.ambient
     self.location_actions = command.actions
 
   def mount_self(self, story: Story):
