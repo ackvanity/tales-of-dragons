@@ -21,6 +21,7 @@ class Character:
       prompt.options.append(EventEmitButton(action.line, action.signal))
 
 
+
 class TalkingRenderChief(haddock.RenderChief[TalkingRenderCommand]):
   command_type = TalkingRenderCommand
 

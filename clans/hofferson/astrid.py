@@ -1,7 +1,7 @@
 import haddock
 from librarians.hofferson import astrid
 from librarians import core
-import copy
+from clans.hofferson import Action
 import random
 
 modules = []
@@ -67,28 +67,6 @@ class RemoveDialogueEvent(haddock.Event):
         self.character = character
         self.id = id
 
-class DialogueAction:
-    @property
-    def line(self) -> str: ...
-
-    condition: str
-    signal: haddock.Event
-    id: str
-
-
-class LiteralDialogueAction(DialogueAction):
-    _line: str
-
-    @property
-    def line(self) -> str:
-        return self._line
-
-    @line.setter
-    def line(self, line: str) -> None:
-        self._line = line
-
-    condition: str = "True"
-
 
 class Human(haddock.Entity):
     id: str
@@ -96,7 +74,7 @@ class Human(haddock.Entity):
     health: int = 100
     location: str
 
-    extra_lines: list[DialogueAction]
+    extra_lines: list[Action]
 
     def __init__(self, id):
         self.id = id
@@ -112,11 +90,8 @@ class Human(haddock.Entity):
         self.extra_lines = []
 
     @property
-    def actions(self) -> list[LiteralDialogueAction]:
-        goodbye = LiteralDialogueAction()
-        goodbye.signal = haddock.PopStateEvent()
-        goodbye.line = f"Goodbye {self.name}"
-        return [goodbye]
+    def actions(self) -> list[Action]:
+        return [Action(line=f"Goodbye {self.name}", signal=haddock.PopStateEvent())]
 
     @property
     def line(self) -> str:
@@ -137,12 +112,14 @@ class Talking(haddock.State):
     def __init__(self, to: str):
         self.to = to
 
-    def _serialize(self) -> str:
+    def _serialize(self) -> haddock.JSONValue:
         return self.to
-    
+
     @classmethod
-    def _deserialize(cls: type["Talking"], data: str, version: int) -> "Talking":
+    def _deserialize(cls: type["Talking"], data: haddock.JSONValue, version: int) -> "Talking":
         if version == 1:
+            if not isinstance(data, str):
+                raise haddock.DeserializeException(f"Expected str for Talking.to, got {data!r}")
             return cls(data)
         else:
             raise haddock.DeserializeVersionUnsupportedException()
@@ -151,9 +128,9 @@ class Talking(haddock.State):
 class TalkingRenderCommand(haddock.RenderCommand):
     speaker: str
     line: str
-    actions: list[LiteralDialogueAction]
+    actions: list[Action]
 
-    def __init__(self, speaker: str, line: str, actions: list[LiteralDialogueAction]):
+    def __init__(self, speaker: str, line: str, actions: list[Action]):
         self.speaker = speaker
         self.line = line
         self.actions = actions
@@ -168,13 +145,13 @@ class HumanRider(haddock.EntityRider[Human]):
             print(f"Trying to add a line to {event.character} - now at {entity.id}")
         if isinstance(event, BaseAddDialogueEvent) and event.character == entity.id:
             print("Adding line!")
-            action = LiteralDialogueAction()
-            action.line = event.line
-            action.signal = event.event
-            action.id = event.id
-            entity.extra_lines.append(action)
+            entity.extra_lines.append(Action(
+                line=event.line,
+                signal=event.event,
+                id=event.id,
+            ))
         if isinstance(event, RemoveDialogueEvent) and event.character == entity.id:
-            entity.extra_lines = [line for line in entity.extra_lines if line.id != event.id]
+            entity.extra_lines = [a for a in entity.extra_lines if a.id != event.id]
 
 
 class TalkingRider(haddock.StateRider[Talking]):
@@ -188,13 +165,13 @@ class TalkingRider(haddock.StateRider[Talking]):
     def render(self, state: Talking) -> haddock.RenderCommand:
         character = get_human(state.to)
 
-        actions = copy.deepcopy(character.actions)
-        actions += character.extra_lines 
+        actions: list[Action] = []
+        actions += character.actions
+        actions += character.extra_lines
         for module in modules:
-            for action in module.extra_character_actions:
-                actions.append(action)
+            actions += module.extra_character_actions
 
-        return TalkingRenderCommand(character.name, character.line, actions) # type: ignore
+        return TalkingRenderCommand(character.name, character.line, actions)
 
 
 def get_human(name: str) -> Human:

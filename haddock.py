@@ -2,7 +2,6 @@ from typing import Callable, TypeAlias, TypeVar, Generic, Type, Union
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
-import json
 
 S = TypeVar("S", bound="State")
 E = TypeVar("E", bound="Entity")
@@ -16,75 +15,77 @@ JSONObject = dict[str, JSONValue]
 JSONArray = list[JSONValue]
 
 class Serializable(ABC):
-    # @abstractmethod
-    # def serialize(self) -> JSONValue:
-    #     pass
-    
-    # @classmethod
-    # @abstractmethod
-    # def deserialize(cls: Type[R], data: JSONValue) -> R:
-    #     pass
-    
-    # @staticmethod
-    # @abstractmethod
-    # def tag() -> str:
-    #     pass
+    @abstractmethod
+    def serialize(self) -> JSONValue: ...
 
-    pass
+    @classmethod
+    @abstractmethod
+    def deserialize(cls: Type[R], data: JSONValue) -> R: ...
+
+    @staticmethod
+    @abstractmethod
+    def tag() -> str: ...
+
 
 class State(Serializable):
-    # @property
-    # @abstractmethod
-    # def version(self) -> int:
-    #     pass
+    @property
+    @abstractmethod
+    def version(self) -> int: ...
 
-    # @abstractmethod
-    # def _serialize(self) -> JSONValue:
-    #     return ""
+    @abstractmethod
+    def _serialize(self) -> JSONValue: ...
 
-    # @classmethod
-    # @abstractmethod
-    # def _deserialize(cls: Type[S], data: JSONValue, version: int) -> S:
-    #     pass
+    @classmethod
+    @abstractmethod
+    def _deserialize(cls: Type[S], data: JSONValue, version: int) -> S: ...
 
-    # def serialize(self) -> JSONValue:
-    #     return [self.version, self._serialize()]
-    
-    # @classmethod
-    # def deserialize(cls: Type[S], data: JSONValue) -> S:
-    #     return cls._deserialize(data[1], data[0]) # type: ignore
-    pass
+    @staticmethod
+    @abstractmethod
+    def tag() -> str: ...
 
-class Entity(ABC):
-    # @property
-    # @abstractmethod
-    # def version(self) -> int:
-    #     pass
+    def serialize(self) -> JSONValue:
+        return [self.version, self._serialize()]
 
-    # @abstractmethod
-    # def _serialize(self) -> JSONValue:
-    #     return ""
-    
-    # @staticmethod
-    # @abstractmethod
-    # def tag() -> str:
-    #     pass
+    @classmethod
+    def deserialize(cls: Type[S], data: JSONValue) -> S:
+        if not isinstance(data, list) or len(data) < 2:
+            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+        version = data[0]
+        if not isinstance(version, int):
+            raise DeserializeException(f"Expected int version, got {version!r}")
+        return cls._deserialize(data[1], version)
 
-    # @classmethod
-    # @abstractmethod
-    # def _deserialize(cls: Type[E], data: JSONValue, version: int) -> E:
-    #     pass
 
-    # def serialize(self) -> JSONValue:
-    #     return [self.version, self._serialize()]
-    
-    # @classmethod
-    # def deserialize(cls: Type[E], data: JSONValue) -> E:
-    #     return cls._deserialize(data[1], data[0]) # type: ignore
-    pass
+class Entity(Serializable):
+    @property
+    @abstractmethod
+    def version(self) -> int: ...
+
+    @abstractmethod
+    def _serialize(self) -> JSONValue: ...
+
+    @staticmethod
+    @abstractmethod
+    def tag() -> str: ...
+
+    @classmethod
+    @abstractmethod
+    def _deserialize(cls: Type[E], data: JSONValue, version: int) -> E: ...
+
+    def serialize(self) -> JSONValue:
+        return [self.version, self._serialize()]
+
+    @classmethod
+    def deserialize(cls: Type[E], data: JSONValue) -> E:
+        if not isinstance(data, list) or len(data) < 2:
+            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+        version = data[0]
+        if not isinstance(version, int):
+            raise DeserializeException(f"Expected int version, got {version!r}")
+        return cls._deserialize(data[1], version)
 
 @dataclass(frozen=True)
-class EntityID:
+class EntityID(Serializable):
     clan: str
     species: str
     name: str
@@ -92,14 +93,18 @@ class EntityID:
     def __str__(self):
         return f"|Clan: {self.clan}|Species: {self.species}|Name: {self.name}|"
 
-    def serialize(self) -> str:
-        return json.dumps([self.clan, self.species, self.name])
+    @staticmethod
+    def tag() -> str:
+        return "haddock.EntityID"
+
+    def serialize(self) -> JSONValue:
+        return [self.clan, self.species, self.name]
 
     @classmethod
-    def deserialize(cls, data: str) -> "EntityID":
-        lst = json.loads(data)
-        id = cls(lst[0], lst[1], lst[2])
-        return id
+    def deserialize(cls, data: JSONValue) -> "EntityID":
+        if not isinstance(data, list) or len(data) < 3:
+            raise DeserializeException(f"Expected [clan, species, name], got {data!r}")
+        return cls(data[0], data[1], data[2])  # type: ignore
 
 class Event:
     pass

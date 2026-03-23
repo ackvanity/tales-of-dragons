@@ -1,8 +1,8 @@
-import copy
 import haddock
 import librarians.hofferson.finn as librarian
 from librarians import core, evaluator
 from librarians.hofferson import get_humans
+from clans.hofferson import Action
 import random
 from clans.hofferson import astrid
 
@@ -31,57 +31,29 @@ class LocationTeleportRider(haddock.EventRider[LocationTeleportEngineEvent]):
         haddock.chieftain.mail_event(haddock.AppendStateEvent(Wandering(event.to)))
 
 
-class LocationAction:
-    @property
-    def line(self) -> str: ...
-
-    condition: str
-    signal: haddock.Event
-
-
-class LiteralLocationAction(LocationAction):
-    _line: str
-
-    @property
-    def line(self) -> str:
-        return self._line
-
-    @line.setter
-    def line(self, line: str) -> None:
-        self._line = line
-
-    condition: str = "True"
-
-
 class Location(haddock.Entity):
-    extra_actions: list[LocationAction]
+    extra_actions: list[Action]
 
     def __init__(self, id):
         self.extra_actions = []
         self.id = id
 
-    def interpret_action(self, action: LocationAction) -> LiteralLocationAction:
-        return action # type: ignore
-
     @property
-    def actions(self) -> list[LiteralLocationAction]:
-        actions = librarian.parse_location_data(core.get_data(f"location/{self.id}")).actions
-        action_list: list[LocationAction] = list(self.extra_actions)
-        for action in actions:
-            action_obj = LiteralLocationAction()
-            action_obj.line = action.line
-            action_obj.signal = evaluator.parse_event(action.event)
-            action_obj.condition = "True"
-            action_list.append(action_obj)
+    def actions(self) -> list[Action]:
+        action_list: list[Action] = list(self.extra_actions)
+        for action in librarian.parse_location_data(core.get_data(f"location/{self.id}")).actions:
+            action_list.append(Action(
+                line=action.line,
+                signal=evaluator.parse_event(action.event),
+            ))
         for human in get_humans():
             character = astrid.get_human(human)
-            print("Checking human", character.name, "residing at", character.location, "while we are at", self.id)
             if character.location == self.id:
-                action_obj = LiteralLocationAction()
-                action_obj.line = f"Hi there {character.name}!"
-                action_obj.signal = astrid.HumanInteractEngineEvent(character.id)
-                action_list.append(action_obj)
-        return list(map(self.interpret_action, action_list))
+                action_list.append(Action(
+                    line=f"Hi there {character.name}!",
+                    signal=astrid.HumanInteractEngineEvent(character.id),
+                ))
+        return action_list
 
     @property
     def ambient(self) -> str:
@@ -98,20 +70,22 @@ class Wandering(haddock.State):
     def version(self) -> int:
         return 1
     
-    def _serialize(self) -> str:
+    def _serialize(self) -> haddock.JSONValue:
         return self.to
-    
+
     @classmethod
-    def _deserialize(cls: type["Wandering"], data: str, version: int) -> "Wandering":
+    def _deserialize(cls: type["Wandering"], data: haddock.JSONValue, version: int) -> "Wandering":
+        if not isinstance(data, str):
+            raise haddock.DeserializeException(f"Expected str for Wandering.to, got {data!r}")
         return cls(data)
 
 
 class WanderingRenderCommand(haddock.RenderCommand):
     id: str
     line: str
-    actions: list[LiteralLocationAction]
+    actions: list[Action]
 
-    def __init__(self, id: str, line: str, actions: list[LiteralLocationAction]):
+    def __init__(self, id: str, line: str, actions: list[Action]):
         self.id = id
         self.line = line
         self.actions = actions
@@ -135,10 +109,9 @@ class WanderingRider(haddock.StateRider[Wandering]):
     def render(self, state: Wandering) -> haddock.RenderCommand:
         location = get_location(state.to)
 
-        actions = copy.deepcopy(location.actions)
+        actions: list[Action] = list(location.actions)
         for module in modules:
-            for action in module.extra_character_actions:
-                actions.append(action)
+            actions += module.extra_character_actions
 
         return WanderingRenderCommand(state.to, location.ambient, actions)
 

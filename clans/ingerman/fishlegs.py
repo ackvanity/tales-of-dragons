@@ -1,6 +1,5 @@
 import haddock
-import json
-from clans.hofferson import astrid
+from clans.hofferson import Action
 
 class BaseItem(haddock.Entity):
   name: str
@@ -22,11 +21,11 @@ class NoItem(BaseItem):
   def version(self) -> int:
     return 1
   
-  def _serialize(self) -> str:
+  def _serialize(self) -> haddock.JSONValue:
     return ""
 
   @classmethod
-  def _deserialize(cls: type["NoItem"], data: str, version: int) -> "NoItem":
+  def _deserialize(cls: type["NoItem"], data: haddock.JSONValue, version: int) -> "NoItem":
     return cls()
 
 class Satchel(haddock.Entity):
@@ -43,13 +42,12 @@ class Satchel(haddock.Entity):
   def version(self) -> int:
     return 1
   
-  def _serialize(self) -> str:
-    data = {}
-    data["owner"] = self.owner.serialize()
-    data["capacity"] = self.capacity
-    data["items"] = [item.serialize() for item in self.items]
-
-    return json.dumps(data)
+  def _serialize(self) -> haddock.JSONValue:
+    return {
+      "owner": self.owner.serialize(),
+      "capacity": self.capacity,
+      "items": [item.serialize() for item in self.items],
+    }
   
   # @classmethod
   # def _deserialize(cls: type["Satchel"], data: str, version: int) -> "Satchel":
@@ -59,11 +57,11 @@ class SatchelsList(haddock.State):
   def version(self) -> int:
     return 1
   
-  def _serialize(self) -> str:
+  def _serialize(self) -> haddock.JSONValue:
     return ""
 
   @classmethod
-  def _deserialize(cls: type["SatchelsList"], data: str, version: int) -> "SatchelsList":
+  def _deserialize(cls: type["SatchelsList"], data: haddock.JSONValue, version: int) -> "SatchelsList":
     return cls()
 
 class SatchelItems(haddock.State):
@@ -76,15 +74,15 @@ class SatchelItems(haddock.State):
   def version(self) -> int:
     return 1
   
-  def _serialize(self) -> str:
+  def _serialize(self) -> haddock.JSONValue:
     return self.satchel.serialize()
 
   @classmethod
-  def _deserialize(cls: type["SatchelItems"], data: str, version: int) -> "SatchelItems":
+  def _deserialize(cls: type["SatchelItems"], data: haddock.JSONValue, version: int) -> "SatchelItems":
     if version == 1:
       return cls(haddock.EntityID.deserialize(data))
     else:
-       raise haddock.DeserializeVersionUnsupportedException
+      raise haddock.DeserializeVersionUnsupportedException
 
 class SatchelsListRenderCommand(haddock.RenderCommand):
   satchels: list[tuple[str, haddock.Event]]
@@ -134,13 +132,10 @@ class OpenSatchelItemsEvent(haddock.EngineEvent):
   def __init__(self, satchel):
     self.satchel = satchel
 
-class OpenSatchelsListAction(astrid.DialogueAction):
-  @property
-  def line(self):
-    return "Check satchel"
-
-  condition: str = "True"
-  signal: haddock.Event = OpenSatchelsEvent()
+open_satchels_action = Action(
+  line="Check satchel",
+  signal=OpenSatchelsEvent(),
+)
 
 class CloseSatchelsListEvent(haddock.Event):
   pass
@@ -169,6 +164,6 @@ def get_satchel(owner: haddock.EntityID):
   
   raise Exception("No satchel?")
 
-extra_character_actions: list[astrid.DialogueAction] = [OpenSatchelsListAction()]
+extra_character_actions: list[Action] = [open_satchels_action]
 riders: haddock.Riders = [SatchelsListRider(), SatchelItemsRider(), OpenSatchelsEventRider(), OpenSatchelItemsEventRider()]
 chiefs: haddock.Chiefs = []
