@@ -1,169 +1,342 @@
+"""
+clans/ingerman/fishlegs.py — Inventory system.
+
+Manages item entities (BaseItem, Item, NoItem), Satchel entities (inventory
+containers), and the UI states for browsing them (SatchelsList, SatchelItems).
+
+Also injects a "Check satchel" action into all NPC dialogue menus via the
+module-level extra_character_actions list.
+"""
+
 import haddock
 from clans.hofferson import Action
 
-class BaseItem(haddock.Entity):
-  name: str
-  description: str
 
-  def serialize(self) -> haddock.JSONValue:
-    raise NotImplementedError
+# ---------------------------------------------------------------------------
+# Item entities
+# ---------------------------------------------------------------------------
+
+class BaseItem(haddock.Entity):
+    """
+    Abstract base for all item types stored in a Satchel.
+
+    Subclasses must set name and description as class attributes or
+    instance attributes, and implement the full Entity serialization
+    interface (version, _serialize, _deserialize, tag).
+    """
+
+    name: str
+    description: str
+
+    def serialize(self) -> haddock.JSONValue:
+        """Placeholder — subclasses must implement _serialize instead."""
+        raise NotImplementedError
+
 
 class Item(BaseItem):
-  name: str = "Item"
-  description: str = "A generic item. Nobody knows what it is useful for..."
+    """A generic placeholder item with no special behaviour."""
+
+    name: str = "Item"
+    description: str = "A generic item. Nobody knows what it is useful for..."
 
 
 class NoItem(BaseItem):
-  name: str = "Empty Slot"
-  description: str = "No items here..."
+    """
+    Sentinel used to fill empty satchel slots in the UI.
 
-  @property
-  def version(self) -> int:
-    return 1
-  
-  def _serialize(self) -> haddock.JSONValue:
-    return ""
+    Serializes to an empty string since it carries no state.
+    """
 
-  @classmethod
-  def _deserialize(cls: type["NoItem"], data: haddock.JSONValue, version: int) -> "NoItem":
-    return cls()
+    name: str = "Empty Slot"
+    description: str = "No items here..."
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return ""
+
+    @classmethod
+    def _deserialize(cls: type["NoItem"], data: haddock.JSONValue, version: int) -> "NoItem":
+        return cls()
+
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.NoItem"
+
+
+# ---------------------------------------------------------------------------
+# Satchel entity
+# ---------------------------------------------------------------------------
 
 class Satchel(haddock.Entity):
-  owner: haddock.EntityID
-  items: list[BaseItem]
-  capacity: int = 10
+    """
+    An inventory container holding up to capacity items.
 
-  def __init__(self, items: list[BaseItem], capacity: int, owner: haddock.EntityID):
-    self.items = items
-    self.capacity = capacity
-    self.owner = owner
+    Stored in Hiccup.entities as EntityID("ingerman", "satchel", <id>).
+    The owner field links the satchel to its owning entity (typically the player).
 
-  @property
-  def version(self) -> int:
-    return 1
-  
-  def _serialize(self) -> haddock.JSONValue:
-    return {
-      "owner": self.owner.serialize(),
-      "capacity": self.capacity,
-      "items": [item.serialize() for item in self.items],
-    }
-  
-  # @classmethod
-  # def _deserialize(cls: type["Satchel"], data: str, version: int) -> "Satchel":
+    Attributes:
+        owner:    EntityID of the entity that owns this satchel.
+        items:    Currently held items (may be shorter than capacity).
+        capacity: Maximum number of items this satchel can hold.
+    """
+
+    owner: haddock.EntityID
+    items: list[BaseItem]
+    capacity: int = 10
+
+    def __init__(
+        self,
+        items: list[BaseItem],
+        capacity: int,
+        owner: haddock.EntityID,
+    ) -> None:
+        self.items = items
+        self.capacity = capacity
+        self.owner = owner
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return {
+            "owner": self.owner.serialize(),
+            "capacity": self.capacity,
+            "items": [item.serialize() for item in self.items],
+        }
+
+    # _deserialize is not yet implemented — see TODO
+    # @classmethod
+    # def _deserialize(cls: type["Satchel"], data: haddock.JSONValue, version: int) -> "Satchel":
+
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.Satchel"
+
+
+# ---------------------------------------------------------------------------
+# Inventory UI states
+# ---------------------------------------------------------------------------
 
 class SatchelsList(haddock.State):
-  @property
-  def version(self) -> int:
-    return 1
-  
-  def _serialize(self) -> haddock.JSONValue:
-    return ""
+    """
+    UI state showing a list of all satchels the player can open.
 
-  @classmethod
-  def _deserialize(cls: type["SatchelsList"], data: haddock.JSONValue, version: int) -> "SatchelsList":
-    return cls()
+    Currently hardcoded to display the player's single satchel.
+    Dismissed by CloseSatchelsListEvent.
+    """
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return ""
+
+    @classmethod
+    def _deserialize(
+        cls: type["SatchelsList"],
+        data: haddock.JSONValue,
+        version: int,
+    ) -> "SatchelsList":
+        return cls()
+
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.SatchelsList"
+
 
 class SatchelItems(haddock.State):
-  satchel: haddock.EntityID
+    """
+    UI state showing the contents of a specific satchel.
 
-  def __init__(self, satchel: haddock.EntityID):
-    self.satchel = satchel
+    Dismissed by CloseSatchelItemsEvent.
 
-  @property
-  def version(self) -> int:
-    return 1
-  
-  def _serialize(self) -> haddock.JSONValue:
-    return self.satchel.serialize()
+    Attributes:
+        satchel: EntityID of the Satchel entity being viewed.
+    """
 
-  @classmethod
-  def _deserialize(cls: type["SatchelItems"], data: haddock.JSONValue, version: int) -> "SatchelItems":
-    if version == 1:
-      return cls(haddock.EntityID.deserialize(data))
-    else:
-      raise haddock.DeserializeVersionUnsupportedException
+    satchel: haddock.EntityID
+
+    def __init__(self, satchel: haddock.EntityID) -> None:
+        self.satchel = satchel
+
+    @property
+    def version(self) -> int:
+        return 1
+
+    def _serialize(self) -> haddock.JSONValue:
+        return self.satchel.serialize()
+
+    @classmethod
+    def _deserialize(
+        cls: type["SatchelItems"],
+        data: haddock.JSONValue,
+        version: int,
+    ) -> "SatchelItems":
+        if version == 1:
+            return cls(haddock.EntityID.deserialize(data))
+        raise haddock.DeserializeVersionUnsupportedException
+
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.SatchelItems"
+
+
+# ---------------------------------------------------------------------------
+# Render commands
+# ---------------------------------------------------------------------------
 
 class SatchelsListRenderCommand(haddock.RenderCommand):
-  satchels: list[tuple[str, haddock.Event]]
+    """
+    Payload for rendering the satchel list screen.
 
-  def __init__(self, satchels: list[tuple[str, haddock.EntityID]]):
-    self.satchels = [(name, OpenSatchelItemsEvent(get_satchel(owner))) for name, owner in satchels] # type: ignore
+    satchels is a list of (display name, open event) pairs, one per satchel.
+    """
+
+    satchels: list[tuple[str, haddock.Event]]
+
+    def __init__(self, satchels: list[tuple[str, haddock.EntityID]]) -> None:
+        self.satchels = [
+            (name, OpenSatchelItemsEvent(get_satchel(owner)))
+            for name, owner in satchels
+        ]  # type: ignore
+
 
 class SatchelItemsRenderCommand(haddock.RenderCommand):
-  title: str
-  items: list[BaseItem]
+    """
+    Payload for rendering a single satchel's contents.
 
-  def __init__(self, title: str, items: list[BaseItem]):
-    self.title = title
-    self.items = items
+    items always has exactly capacity entries; empty slots are filled with NoItem.
+    """
 
-class SatchelsListRider(haddock.StateRider[SatchelsList]):
-  state_type = SatchelsList
-  
-  def roll_call(self, state: SatchelsList, event: haddock.Event) -> None:
-    if isinstance(event, CloseSatchelsListEvent):
-      haddock.chieftain.mail_event(haddock.PopStateEvent())
+    title: str
+    items: list[BaseItem]
 
-  def render(self, state: SatchelsList) -> haddock.RenderCommand:
-        return SatchelsListRenderCommand([("My satchel", haddock.EntityID("haddock", "player", "player"))])
+    def __init__(self, title: str, items: list[BaseItem]) -> None:
+        self.title = title
+        self.items = items
 
-class SatchelItemsRider(haddock.StateRider[SatchelItems]):
-  state_type = SatchelItems
 
-  def roll_call(self, state: SatchelItems, event: haddock.Event) -> None:
-    if isinstance(event, CloseSatchelItemsEvent):
-      haddock.chieftain.mail_event(haddock.PopStateEvent())
+# ---------------------------------------------------------------------------
+# Events
+# ---------------------------------------------------------------------------
 
-  def render(self, state: SatchelItems) -> haddock.RenderCommand:
-    def no_default():
-      raise Exception("Satchel was a ghost?")
-    
-    satchel: Satchel = haddock.chieftain.call_entity(state.satchel, no_default) # type: ignore
-
-    return SatchelItemsRenderCommand(f"Satchel ({satchel.capacity} items)", satchel.items + [NoItem() for _ in range(satchel.capacity - len(satchel.items))])
-  
 class OpenSatchelsEvent(haddock.EngineEvent):
-  pass
+    """Open the satchel list screen. Fired by the "Check satchel" action."""
+
 
 class OpenSatchelItemsEvent(haddock.EngineEvent):
-  satchel: haddock.EntityID
+    """Open the items view for a specific satchel."""
 
-  def __init__(self, satchel):
-    self.satchel = satchel
+    satchel: haddock.EntityID
 
-open_satchels_action = Action(
-  line="Check satchel",
-  signal=OpenSatchelsEvent(),
-)
+    def __init__(self, satchel: haddock.EntityID) -> None:
+        self.satchel = satchel
+
 
 class CloseSatchelsListEvent(haddock.Event):
-  pass
+    """Dismiss the satchel list screen (pop SatchelsList state)."""
+
 
 class CloseSatchelItemsEvent(haddock.Event):
-  pass
+    """Dismiss the satchel items screen (pop SatchelItems state)."""
+
+
+# ---------------------------------------------------------------------------
+# Riders
+# ---------------------------------------------------------------------------
+
+class SatchelsListRider(haddock.StateRider[SatchelsList]):
+    """Renders the satchel list and handles its close event."""
+
+    state_type = SatchelsList
+
+    def roll_call(self, state: SatchelsList, event: haddock.Event) -> None:
+        if isinstance(event, CloseSatchelsListEvent):
+            haddock.chieftain.mail_event(haddock.PopStateEvent())
+
+    def render(self, state: SatchelsList) -> haddock.RenderCommand:
+        return SatchelsListRenderCommand([
+            ("My satchel", haddock.EntityID("haddock", "player", "player"))
+        ])
+
+
+class SatchelItemsRider(haddock.StateRider[SatchelItems]):
+    """Renders a satchel's contents and handles its close event."""
+
+    state_type = SatchelItems
+
+    def roll_call(self, state: SatchelItems, event: haddock.Event) -> None:
+        if isinstance(event, CloseSatchelItemsEvent):
+            haddock.chieftain.mail_event(haddock.PopStateEvent())
+
+    def render(self, state: SatchelItems) -> haddock.RenderCommand:
+        def no_default():
+            raise Exception("Satchel was a ghost?")
+
+        satchel: Satchel = haddock.chieftain.call_entity(state.satchel, no_default)  # type: ignore
+        padded = satchel.items + [
+            NoItem() for _ in range(satchel.capacity - len(satchel.items))
+        ]
+        return SatchelItemsRenderCommand(f"Satchel ({satchel.capacity} items)", padded)
+
 
 class OpenSatchelsEventRider(haddock.EventRider[OpenSatchelsEvent]):
-  event_type = OpenSatchelsEvent
+    """Push SatchelsList state when the player opens their inventory."""
 
-  def roll_call(self, event: OpenSatchelsEvent) -> None:
-    haddock.chieftain.mail_event(haddock.AppendStateEvent(SatchelsList()))
+    event_type = OpenSatchelsEvent
+
+    def roll_call(self, event: OpenSatchelsEvent) -> None:
+        haddock.chieftain.mail_event(haddock.AppendStateEvent(SatchelsList()))
+
 
 class OpenSatchelItemsEventRider(haddock.EventRider[OpenSatchelItemsEvent]):
-  event_type = OpenSatchelItemsEvent
+    """Push SatchelItems state for a specific satchel."""
 
-  def roll_call(self, event: OpenSatchelItemsEvent) -> None:
-    haddock.chieftain.mail_event(haddock.AppendStateEvent(SatchelItems(event.satchel)))
+    event_type = OpenSatchelItemsEvent
 
-def get_satchel(owner: haddock.EntityID):
-  satchels = haddock.chieftain.call_entities('ingerman', 'satchel', None)
+    def roll_call(self, event: OpenSatchelItemsEvent) -> None:
+        haddock.chieftain.mail_event(haddock.AppendStateEvent(SatchelItems(event.satchel)))
 
-  for id, satchel in satchels:
-    if satchel.owner == owner:
-      return id
-  
-  raise Exception("No satchel?")
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def get_satchel(owner: haddock.EntityID) -> haddock.EntityID:
+    """
+    Return the EntityID of the satchel owned by the given entity.
+
+    Searches all ingerman/satchel entities. Raises if none found.
+    """
+    satchels = haddock.chieftain.call_entities("ingerman", "satchel", None)
+    for id, satchel in satchels:
+        if satchel.owner == owner:  # type: ignore
+            return id
+    raise Exception("No satchel?")
+
+
+# ---------------------------------------------------------------------------
+# Module exports
+# ---------------------------------------------------------------------------
+
+open_satchels_action = Action(
+    line="Check satchel",
+    signal=OpenSatchelsEvent(),
+)
+"""The "Check satchel" action injected into all NPC menus."""
 
 extra_character_actions: list[Action] = [open_satchels_action]
-riders: haddock.Riders = [SatchelsListRider(), SatchelItemsRider(), OpenSatchelsEventRider(), OpenSatchelItemsEventRider()]
+"""Actions contributed by this module to every NPC dialogue menu."""
+
+riders: haddock.Riders = [
+    SatchelsListRider(),
+    SatchelItemsRider(),
+    OpenSatchelsEventRider(),
+    OpenSatchelItemsEventRider(),
+]
 chiefs: haddock.Chiefs = []

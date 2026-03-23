@@ -1,3 +1,16 @@
+"""
+clans/hofferson/astrid.py — NPC dialogue system.
+
+Manages Human entities (NPCs) and the Talking state (the dialogue screen
+shown when the player interacts with an NPC).
+
+Key responsibilities:
+  - Loading NPC data from data/character/human/<id>.json
+  - Tracking dynamically injected dialogue options (from quest hooks)
+  - Dispatching HumanInteract events to enter/exit dialogue
+  - Rendering the Talking state via TalkingRenderCommand
+"""
+
 import haddock
 from librarians.hofferson import astrid
 from librarians import core
@@ -5,96 +18,143 @@ from clans.hofferson import Action
 import random
 
 modules = []
+"""
+Registered modules that inject extra character actions into all NPC menus.
 
+Populated at startup by main.py via modules.append(). Each entry must
+expose an extra_character_actions: list[Action] attribute.
+"""
+
+
+# ---------------------------------------------------------------------------
+# Events
+# ---------------------------------------------------------------------------
 
 class HumanInteractEventBase:
+    """Shared payload for human interaction events."""
+
     to: str
 
-    def __init__(self, to: str):
+    def __init__(self, to: str) -> None:
         self.to = to
 
 
 class HumanInteractEngineEvent(HumanInteractEventBase, haddock.EngineEvent):
-    pass
+    """
+    Engine event that pushes a Talking state for the given NPC.
+
+    Handled by HumanInteractRider. Fired when the player selects an NPC
+    from a location menu, or when a quest directly triggers an interaction.
+    """
 
 
 class HumanInteractEvent(HumanInteractEventBase, haddock.Event):
-    pass
+    """
+    Non-engine variant of HumanInteractEngineEvent.
 
+    Fired by TalkingRider when the player interacts with an NPC while
+    already in a Talking state (i.e. switching conversation target).
+    """
 
-class HumanInteractRider(haddock.EventRider[HumanInteractEngineEvent]):
-    event_type = HumanInteractEngineEvent
-
-    def roll_call(self, event: HumanInteractEngineEvent) -> None:
-        haddock.chieftain.mail_event(haddock.AppendStateEvent(Talking(event.to)))
 
 class AddDialogueEvent(haddock.EngineEvent):
+    """
+    Engine event that injects a dialogue option into an NPC's menu.
+
+    Fired by DragonicQuest via add_character_hook(). Handled by
+    AddDialogueEventRider, which ensures the Human entity exists before
+    forwarding as a BaseAddDialogueEvent.
+    """
+
     character: str
     line: str
     event: haddock.Event
     id: str
 
-    def __init__(self, character, line, event, id):
+    def __init__(self, character: str, line: str, event: haddock.Event, id: str) -> None:
         self.character = character
         self.line = line
         self.event = event
         self.id = id
+
 
 class BaseAddDialogueEvent(haddock.Event):
+    """
+    Non-engine variant of AddDialogueEvent, broadcast to entity riders.
+
+    HumanRider picks this up and appends the action to the target Human's
+    extra_character_actions list.
+    """
+
     character: str
     line: str
     event: haddock.Event
     id: str
 
-    def __init__(self, character, line, event, id):
+    def __init__(self, character: str, line: str, event: haddock.Event, id: str) -> None:
         self.character = character
         self.line = line
         self.event = event
         self.id = id
 
-class AddDialogueEventRider(haddock.EventRider[AddDialogueEvent]):
-    event_type = AddDialogueEvent
-
-    def roll_call(self, event: AddDialogueEvent) -> None:
-        get_human(event.character)
-        haddock.chieftain.mail_event(BaseAddDialogueEvent(event.character, event.line, event.event, event.id))
 
 class RemoveDialogueEvent(haddock.Event):
+    """
+    Removes a previously injected dialogue option from an NPC.
+
+    Fired automatically when the player clicks a quest-injected action,
+    so the option disappears after one use.
+    """
+
     character: str
     id: str
 
-    def __init__(self, character, id):
+    def __init__(self, character: str, id: str) -> None:
         self.character = character
         self.id = id
 
 
+# ---------------------------------------------------------------------------
+# Entities
+# ---------------------------------------------------------------------------
+
 class Human(haddock.Entity):
+    """
+    An interactable NPC loaded from data/character/human/<id>.json.
+
+    Stored in Hiccup.entities as EntityID("hofferson", "human", <id>).
+    Created lazily on first interaction via get_human().
+
+    Attributes:
+        id:                       JSON id field, matches the file name.
+        name:                     Short display name shown in dialogue.
+        health:                   Current health (default 100).
+        location:                 Current location ID.
+        extra_character_actions:  Dynamically injected actions from quest hooks.
+    """
+
     id: str
     name: str
     health: int = 100
     location: str
-
     extra_character_actions: list[Action]
 
-    def __init__(self, id):
+    def __init__(self, id: str) -> None:
         self.id = id
-        self.health = astrid.parse_character_data(
-            core.get_data(f"character/human/{id}")
-        ).variables.health
-        self.location = astrid.parse_character_data(
-            core.get_data(f"character/human/{id}")
-        ).variables.location
-        self.name = astrid.parse_character_data(
-            core.get_data(f"character/human/{id}")
-        ).name
+        data = astrid.parse_character_data(core.get_data(f"character/human/{id}"))
+        self.health = data.variables.health
+        self.location = data.variables.location
+        self.name = data.name
         self.extra_character_actions = []
 
     @property
     def actions(self) -> list[Action]:
+        """Return the NPC's static actions (currently just a Goodbye option)."""
         return [Action(line=f"Goodbye {self.name}", signal=haddock.PopStateEvent())]
 
     @property
     def line(self) -> str:
+        """Return a random greeting line from the NPC's menu_lines."""
         return random.choice(
             astrid.parse_character_data(
                 core.get_data(f"character/human/{self.id}")
@@ -102,15 +162,26 @@ class Human(haddock.Entity):
         )
 
 
+# ---------------------------------------------------------------------------
+# States
+# ---------------------------------------------------------------------------
+
 class Talking(haddock.State):
+    """
+    Active state while the player is in conversation with an NPC.
+
+    Holds the ID of the NPC being spoken to. Rendered by TalkingRider
+    into a TalkingRenderCommand consumed by TalkingRenderChief.
+    """
+
     to: str
+
+    def __init__(self, to: str) -> None:
+        self.to = to
 
     @property
     def version(self) -> int:
         return 1
-
-    def __init__(self, to: str):
-        self.to = to
 
     def _serialize(self) -> haddock.JSONValue:
         return self.to
@@ -121,26 +192,76 @@ class Talking(haddock.State):
             if not isinstance(data, str):
                 raise haddock.DeserializeException(f"Expected str for Talking.to, got {data!r}")
             return cls(data)
-        else:
-            raise haddock.DeserializeVersionUnsupportedException()
+        raise haddock.DeserializeVersionUnsupportedException()
 
+    @staticmethod
+    def tag() -> str:
+        return "hofferson.Talking"
+
+
+# ---------------------------------------------------------------------------
+# Render command
+# ---------------------------------------------------------------------------
 
 class TalkingRenderCommand(haddock.RenderCommand):
+    """
+    Data passed from TalkingRider to TalkingRenderChief.
+
+    Attributes:
+        speaker:  NPC display name.
+        line:     Greeting line shown above the action menu.
+        actions:  Full list of selectable options (static + injected + module).
+    """
+
     speaker: str
     line: str
     actions: list[Action]
 
-    def __init__(self, speaker: str, line: str, actions: list[Action]):
+    def __init__(self, speaker: str, line: str, actions: list[Action]) -> None:
         self.speaker = speaker
         self.line = line
         self.actions = actions
 
 
+# ---------------------------------------------------------------------------
+# Riders
+# ---------------------------------------------------------------------------
+
+class HumanInteractRider(haddock.EventRider[HumanInteractEngineEvent]):
+    """Intercepts HumanInteractEngineEvent and pushes a Talking state."""
+
+    event_type = HumanInteractEngineEvent
+
+    def roll_call(self, event: HumanInteractEngineEvent) -> None:
+        haddock.chieftain.mail_event(haddock.AppendStateEvent(Talking(event.to)))
+
+
+class AddDialogueEventRider(haddock.EventRider[AddDialogueEvent]):
+    """
+    Intercepts AddDialogueEvent, ensures the Human entity exists,
+    then re-broadcasts as BaseAddDialogueEvent for HumanRider to handle.
+    """
+
+    event_type = AddDialogueEvent
+
+    def roll_call(self, event: AddDialogueEvent) -> None:
+        get_human(event.character)
+        haddock.chieftain.mail_event(
+            BaseAddDialogueEvent(event.character, event.line, event.event, event.id)
+        )
+
+
 class HumanRider(haddock.EntityRider[Human]):
+    """
+    Handles events for all Human entities.
+
+    Listens for BaseAddDialogueEvent to inject quest actions, and
+    RemoveDialogueEvent to remove them after use.
+    """
+
     entity_type = Human
 
     def roll_call(self, entity: Human, event: haddock.Event) -> None:
-        print(f"Got event {event}")
         if isinstance(event, BaseAddDialogueEvent):
             print(f"Trying to add a line to {event.character} - now at {entity.id}")
         if isinstance(event, BaseAddDialogueEvent) and event.character == entity.id:
@@ -151,10 +272,14 @@ class HumanRider(haddock.EntityRider[Human]):
                 id=event.id,
             ))
         if isinstance(event, RemoveDialogueEvent) and event.character == entity.id:
-            entity.extra_character_actions = [a for a in entity.extra_character_actions if a.id != event.id]
+            entity.extra_character_actions = [
+                a for a in entity.extra_character_actions if a.id != event.id
+            ]
 
 
 class TalkingRider(haddock.StateRider[Talking]):
+    """Handles events and renders the Talking state."""
+
     state_type = Talking
 
     def roll_call(self, state: Talking, event: haddock.Event) -> None:
@@ -163,6 +288,7 @@ class TalkingRider(haddock.StateRider[Talking]):
             haddock.chieftain.mail_event(HumanInteractEngineEvent(event.to))
 
     def render(self, state: Talking) -> haddock.RenderCommand:
+        """Build a TalkingRenderCommand from the NPC's combined action list."""
         character = get_human(state.to)
 
         actions: list[Action] = []
@@ -174,9 +300,25 @@ class TalkingRider(haddock.StateRider[Talking]):
         return TalkingRenderCommand(character.name, character.line, actions)
 
 
-def get_human(name: str) -> Human:
-    return haddock.chieftain.call_entity(haddock.EntityID("hofferson", "human", name), lambda: Human(name))  # type: ignore
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
+def get_human(name: str) -> Human:
+    """
+    Return the Human entity for the given NPC id, creating it if absent.
+
+    Stored as EntityID("hofferson", "human", name).
+    """
+    return haddock.chieftain.call_entity(
+        haddock.EntityID("hofferson", "human", name),
+        lambda: Human(name),
+    )  # type: ignore
+
+
+# ---------------------------------------------------------------------------
+# Module exports
+# ---------------------------------------------------------------------------
 
 riders: haddock.Riders = [HumanRider(), TalkingRider(), HumanInteractRider(), AddDialogueEventRider()]
 chiefs: haddock.Chiefs = []
