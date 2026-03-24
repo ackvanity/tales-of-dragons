@@ -651,6 +651,66 @@ class Hiccup:
             f"The entire village celebrates a new ally to defend all of our dragons."
         )
 
+    def save(self, path: str) -> None:
+        """
+        Serialize the full engine state to a JSON file at path.
+
+        Saves:
+          - states: the state stack as a list of {"tag", "data"} dicts
+          - entities: all entities as a list of {"id", "tag", "data"} dicts
+
+        Raises FileNotFoundError if the directory does not exist.
+        Raises DeserializeException (indirectly) if a type is not registered.
+        """
+        import json, os
+        os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+
+        states_out: JSONArray = [
+            {"tag": state.tag(), "data": state.serialize()}
+            for state in self.states
+        ]
+        entities_out: JSONArray = [
+            {"id": eid.serialize(), "tag": entity.tag(), "data": entity.serialize()}
+            for eid, entity in self.entities.items()
+        ]
+        payload: JSONObject = {"states": states_out, "entities": entities_out}
+
+        with open(path, "w") as f:
+            json.dump(payload, f, indent=2)
+
+    def load(self, path: str) -> None:
+        """
+        Restore engine state from a JSON save file, replacing current state.
+
+        Clears the current state stack and entity registry, then reconstructs
+        them from the file using the registered State and Entity type registries.
+
+        Raises FileNotFoundError if path does not exist.
+        Raises DeserializeException if a tag is unknown or data is malformed.
+        """
+        import json
+
+        with open(path, "r") as f:
+            payload: JSONObject = json.load(f)
+
+        self.states.clear()
+        self.entities.clear()
+
+        for entry in payload["states"]:  # type: ignore
+            tag = entry["tag"]
+            cls = _STATE_REGISTRY.get(tag)
+            if cls is None:
+                raise DeserializeException(f"Unknown state tag in save file: {tag!r}")
+            self.states.append(cls.deserialize(entry["data"]))
+
+        for entry in payload["entities"]:  # type: ignore
+            eid = EntityID.deserialize(entry["id"])
+            tag = entry["tag"]
+            cls = _ENTITY_REGISTRY.get(tag)
+            if cls is None:
+                raise DeserializeException(f"Unknown entity tag in save file: {tag!r}")
+            self.entities[eid] = cls.deserialize(entry["data"])
+
     def call_entity(
         self,
         position: EntityID,
@@ -701,6 +761,37 @@ Riders: TypeAlias = list[EventRider | StateRider | EntityRider]
 
 Chiefs: TypeAlias = list[RenderChief]
 """Type alias for the chiefs list exported by each clan module."""
+
+# ---------------------------------------------------------------------------
+# State and Entity type registries
+# ---------------------------------------------------------------------------
+
+_STATE_REGISTRY: dict[str, type[State]] = {}
+"""Maps tag strings to State subclasses for deserialization."""
+
+_ENTITY_REGISTRY: dict[str, type[Entity]] = {}
+"""Maps tag strings to Entity subclasses for deserialization."""
+
+
+def register_state(cls: type[State]) -> None:
+    """
+    Register a State subclass so Hiccup.load() can reconstruct it by tag.
+
+    Call once at module level after the class is defined, for every
+    concrete State subclass whose instances may appear in a save file.
+    """
+    _STATE_REGISTRY[cls.tag()] = cls
+
+
+def register_entity(cls: type[Entity]) -> None:
+    """
+    Register an Entity subclass so Hiccup.load() can reconstruct it by tag.
+
+    Call once at module level after the class is defined, for every
+    concrete Entity subclass whose instances may appear in a save file.
+    """
+    _ENTITY_REGISTRY[cls.tag()] = cls
+
 
 # ---------------------------------------------------------------------------
 # Event type registry

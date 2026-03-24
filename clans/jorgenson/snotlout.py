@@ -658,3 +658,10 @@ chiefs: haddock.Chiefs = []
 
 # Register all events that appear as Action.signal or inside EventSeries
 haddock.register_event(ReturnDataEvent)
+
+# Register serializable types with the engine type registries
+haddock.register_state(Prompt)
+haddock.register_state(Dialogue)
+haddock.register_state(Story)
+haddock.register_entity(Player)
+haddock.register_entity(DragonicQuest)

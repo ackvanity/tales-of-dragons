@@ -404,3 +404,8 @@ chiefs: haddock.Chiefs = []
 
 # Register all events that appear as Action.signal or inside EventSeries
 haddock.register_event(OpenSatchelsEvent)
+
+# Register serializable types with the engine type registries
+haddock.register_state(SatchelsList)
+haddock.register_state(SatchelItems)
+haddock.register_entity(Satchel)

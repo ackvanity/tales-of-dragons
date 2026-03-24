@@ -168,9 +168,9 @@ class Human(haddock.Entity):
     def __init__(self, id: str) -> None:
         self.id = id
         data = astrid.parse_character_data(core.get_data(f"character/human/{id}"))
+        self.name = data.name
         self.health = data.variables.health
         self.location = data.variables.location
-        self.name = data.name
         self.extra_character_actions = []
 
     @property
@@ -212,11 +212,8 @@ class Human(haddock.Entity):
     @property
     def line(self) -> str:
         """Return a random greeting line from the NPC's menu_lines."""
-        return random.choice(
-            astrid.parse_character_data(
-                core.get_data(f"character/human/{self.id}")
-            ).menu_lines
-        )
+        data = astrid.parse_character_data(core.get_data(f"character/human/{self.id}"))
+        return random.choice(data.menu_lines)
 
 
 # ---------------------------------------------------------------------------
@@ -383,3 +380,7 @@ chiefs: haddock.Chiefs = []
 # Register all events that appear as Action.signal or inside EventSeries
 haddock.register_event(HumanInteractEngineEvent)
 haddock.register_event(RemoveDialogueEvent)
+
+# Register serializable types with the engine type registries
+haddock.register_state(Talking)
+haddock.register_entity(Human)

@@ -290,3 +290,7 @@ chiefs: haddock.Chiefs = []
 
 # Register all events that appear as Action.signal or inside EventSeries
 haddock.register_event(LocationTeleportEngineEvent)
+
+# Register serializable types with the engine type registries
+haddock.register_state(Wandering)
+haddock.register_entity(Location)
