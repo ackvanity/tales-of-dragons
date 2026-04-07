@@ -1,9 +1,16 @@
-EventEmitButton {
+Prompt > Button {
   background: transparent !important;
   border: none !important;
-  margin-bottom: 1;
+  padding: 0 !important;
+  margin-bottom: 1 !important;
+  text-style: italic !important;
+
+  * {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
 
   &:hover {
-    text-style: italic bold;
+    text-style: italic bold !important;
   }
 }

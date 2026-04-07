@@ -21,11 +21,11 @@ from textual.app import ComposeResult
 from textual.widgets import Label
 from textual.containers import VerticalScroll
 from textual.reactive import reactive
-from components.base import EventEmitButton
+from components.base import EventEmitButton, TCSS
 from stoick import TextualApplication
 
 
-class SatchelList(VerticalScroll):
+class SatchelList(VerticalScroll, TCSS):
     """
     A scrollable list of satchels the player can open.
 
@@ -44,11 +44,13 @@ class SatchelList(VerticalScroll):
 
     def compose(self) -> ComposeResult:
         for name, event in self.satchels:
-            yield EventEmitButton(name, event)
-        yield EventEmitButton("Go Back.", CloseSatchelsListEvent())
+            yield EventEmitButton(name, event, classes="satchel")
+        yield EventEmitButton(
+            "Go Back.", CloseSatchelsListEvent(), classes="back"
+        )
 
 
-class SatchelItems(VerticalScroll):
+class SatchelItems(VerticalScroll, TCSS):
     """
     A scrollable view of a single satchel's contents.
 

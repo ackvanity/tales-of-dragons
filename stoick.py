@@ -14,7 +14,6 @@ from components.hofferson import Story
 
 
 class TextualApplication(App):
-
     """
     The main Textual application.
 
@@ -24,6 +23,8 @@ class TextualApplication(App):
     Registered as a virtual subclass of haddock.Application so it satisfies
     the Application ABC without inheriting its metaclass directly.
     """
+
+    CSS_PATH = "./tcss/stoick.tcss"
 
     def compose(self) -> ComposeResult:
         """Build the base UI layout: header, content area, footer."""

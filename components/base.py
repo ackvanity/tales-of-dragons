@@ -10,14 +10,16 @@ from textual.reactive import reactive
 from librarians.tcss import load_tcss_file
 import haddock
 
+
 class TCSS:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
 
-        module = '/'.join(cls.__module__.split('.')[1:])
+        module = "/".join(cls.__module__.split(".")[1:])
         name = cls.__name__
-        
+
         cls.DEFAULT_CSS = load_tcss_file(module, name)
+
 
 class EventEmitButton(Button, TCSS):
     """
@@ -34,14 +36,18 @@ class EventEmitButton(Button, TCSS):
     event: reactive[haddock.Event] = reactive(haddock.Event())
 
     def __init__(
-        self, line: str = "", haddock_event: haddock.Event = haddock.Event()
+        self,
+        line: str = "",
+        haddock_event: haddock.Event = haddock.Event(),
+        *args,
+        **kwargs,
     ) -> None:
         """
         Args:
             line:          The button label shown to the player.
             haddock_event: The event to fire when the button is pressed.
         """
-        super().__init__(line)
+        super().__init__(line, *args, **kwargs)
         self.event = haddock_event
 
     def on_button_pressed(self, event: Button.Pressed) -> None:

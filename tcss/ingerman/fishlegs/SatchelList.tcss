@@ -1,0 +1,8 @@
+EventEmitButton {
+  background: green !important;
+  border: none !important;
+  padding: 0 !important;
+  margin-bottom: 1 !important;
+  text-style: italic !important;
+  align-horizontal: left !important;
+}

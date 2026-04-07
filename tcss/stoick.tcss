@@ -1,0 +1,25 @@
+#application {
+  background: #E59F71;
+  color: #0C1618;
+}
+
+#application > * > * {
+  max-width: 96;
+  width: 100%;
+  margin: 1;
+}
+
+#application > * {
+  width: 100%;
+  margin: 0 2;
+  padding: 1;
+  align-horizontal: center;
+}
+
+Button {
+  # background: transparent;
+  # border: none;
+  # padding: 0;
+  color: #0C1618;
+  # text-style: none;
+}

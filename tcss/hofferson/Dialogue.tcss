@@ -1,6 +1,7 @@
 .speaker {
-  width: 10;
+  width: 16;
   padding-right: 2;
+  text-style: bold;
 }
 
 .line {
