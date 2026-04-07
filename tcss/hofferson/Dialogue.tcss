@@ -1,0 +1,8 @@
+.speaker {
+  width: 10;
+  padding-right: 2;
+}
+
+.line {
+  width: 100%;
+}

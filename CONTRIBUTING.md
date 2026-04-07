@@ -452,37 +452,11 @@ Plain JSON array of all character IDs the engine should load:
 | `ambient` | string[] | yes | Scene-setting narration; one chosen at random |
 | `actions` | ActionData[] | yes | Navigation and interaction options |
 
-**Do not add connections directly to location files.** Define them in `connections.json` and run `consolidate.py`.
+~~**Do not add connections directly to location files.** Define them in `connections.json` and run `consolidate.py`.~~
 
-**Connection file:** `data/location/connections.json`
+**Do not use `consolidate.py`**. It is a legacy migration script and will be removed in a future release.
 
-```json
-{
-  "<uuid>": {
-    "from": "berk_square",
-    "to": "berk_stables",
-    "action": "Button label text for this path",
-    "variables": {},
-    "opening_states": ["path_1"],
-    "states": {
-      "path_1": {
-        "steps": [
-          { "type": "story", "text": "Narration shown while taking this path." }
-        ],
-        "transitions": [
-          { "condition": "True", "target": "__menu__" }
-        ]
-      }
-    }
-  }
-}
-```
-
-Currently only `from`, `to`, and `action` are consumed by `consolidate.py`. The `states`/`steps`/`transitions` system is not yet wired into the engine.
-
-To add a new connection:
-1. Add an entry to `connections.json` with a fresh UUID as the key.
-2. Run `python consolidate.py` from the project root.
+**DO define connections using the "actions" field**. To add flavor text, emit events. In the future, a built-in solution will be given.
 
 ---
 
@@ -512,7 +486,7 @@ haddock.chieftain.entities[
 ] = snotlout.DragonicQuest("<id>")
 ```
 
-The quest starts automatically on game boot if it has not been started before. It resumes whenever a `ReturnDataEvent` arrives addressed to its ID (which happens automatically after `send_dialogue`, `send_story`, and `send_prompt` complete).
+The quest starts automatically on game boot if it has not been started before. It resumes whenever a `ReturnDataEvent` arrives addressed to its ID (which happens automatically after `send_dialogue`, `send_story`, and `send_prompt` complete). You should not need to handle events and communication with the game engine in any manner, including by handling a `ReturnDataEvent`, unless you are working with custom bindings to the game engine, mostly used for stateful operations. In that case, you will most likely need to extend `jorgenson/snotlout.py` to handle or delegate the operation correctly.
 
 ---
 

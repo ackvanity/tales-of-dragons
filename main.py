@@ -15,8 +15,15 @@ from clans.ingerman import fishlegs
 from clans.jorgenson import snotlout
 from components.hofferson.astrid import TalkingRenderChief
 from components.hofferson.finn import WanderingRenderChief
-from components.ingerman.fishlegs import SatchelsListRenderChief, SatchelItemsRenderChief
-from components.jorgenson.snotlout import PromptRenderChief, DialogueRenderChief, StoryRenderChief
+from components.ingerman.fishlegs import (
+    SatchelsListRenderChief,
+    SatchelItemsRenderChief,
+)
+from components.jorgenson.snotlout import (
+    PromptRenderChief,
+    DialogueRenderChief,
+    StoryRenderChief,
+)
 
 # ---------------------------------------------------------------------------
 # Register module cross-injections
@@ -60,19 +67,19 @@ haddock.chieftain.states.append(finn.Wandering("berk_arena"))
 haddock.chieftain.states.append(astrid.Talking("hiccup"))
 
 # Player inventory
-haddock.chieftain.entities[haddock.EntityID("ingerman", "satchel", "1")] = fishlegs.Satchel(
-    [], 10, haddock.EntityID("haddock", "player", "player")
+haddock.chieftain.entities[haddock.EntityID("ingerman", "satchel", "1")] = (
+    fishlegs.Satchel([], 10, haddock.EntityID("haddock", "player", "player"))
 )
 
 # Player entity
-haddock.chieftain.entities[haddock.EntityID("jorgenson", "player", "player")] = snotlout.Player(
-    "Boldkhava"
-)
+haddock.chieftain.entities[
+    haddock.EntityID("jorgenson", "player", "player")
+] = snotlout.Player("Boldkhava")
 
 # Active quests
-haddock.chieftain.entities[haddock.EntityID("jorgenson", "quest", "rescue_hiccup_toothless")] = (
-    snotlout.DragonicQuest("rescue_hiccup_toothless")
-)
+haddock.chieftain.entities[
+    haddock.EntityID("jorgenson", "quest", "rescue_hiccup_toothless")
+] = snotlout.DragonicQuest("rescue_hiccup_toothless")
 
 # ---------------------------------------------------------------------------
 # Run

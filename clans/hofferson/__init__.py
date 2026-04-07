@@ -51,7 +51,9 @@ class Action(haddock.Serializable):
     @classmethod
     def deserialize(cls: Type["Action"], data: haddock.JSONValue) -> "Action":
         if not isinstance(data, dict):
-            raise haddock.DeserializeException(f"Expected dict for Action, got {data!r}")
+            raise haddock.DeserializeException(
+                f"Expected dict for Action, got {data!r}"
+            )
         return cls(
             line=data["line"],  # type: ignore
             signal=haddock.deserialize_event(data["signal"]),

@@ -11,10 +11,10 @@ module-level extra_character_actions list.
 import haddock
 from clans.hofferson import Action
 
-
 # ---------------------------------------------------------------------------
 # Item entities
 # ---------------------------------------------------------------------------
+
 
 class BaseItem(haddock.Entity):
     """
@@ -50,7 +50,9 @@ class Item(BaseItem):
         return ""
 
     @classmethod
-    def _deserialize(cls: type["Item"], data: haddock.JSONValue, version: int) -> "Item":
+    def _deserialize(
+        cls: type["Item"], data: haddock.JSONValue, version: int
+    ) -> "Item":
         return cls()
 
     @staticmethod
@@ -76,7 +78,9 @@ class NoItem(BaseItem):
         return ""
 
     @classmethod
-    def _deserialize(cls: type["NoItem"], data: haddock.JSONValue, version: int) -> "NoItem":
+    def _deserialize(
+        cls: type["NoItem"], data: haddock.JSONValue, version: int
+    ) -> "NoItem":
         return cls()
 
     @staticmethod
@@ -87,6 +91,7 @@ class NoItem(BaseItem):
 # ---------------------------------------------------------------------------
 # Satchel entity
 # ---------------------------------------------------------------------------
+
 
 class Satchel(haddock.Entity):
     """
@@ -127,10 +132,14 @@ class Satchel(haddock.Entity):
         }
 
     @classmethod
-    def _deserialize(cls: type["Satchel"], data: haddock.JSONValue, version: int) -> "Satchel":
+    def _deserialize(
+        cls: type["Satchel"], data: haddock.JSONValue, version: int
+    ) -> "Satchel":
         if version == 1:
             if not isinstance(data, dict):
-                raise haddock.DeserializeException(f"Expected dict for Satchel, got {data!r}")
+                raise haddock.DeserializeException(
+                    f"Expected dict for Satchel, got {data!r}"
+                )
             owner = haddock.EntityID.deserialize(data["owner"])
             capacity = data["capacity"]
             items = [_deserialize_item(i) for i in data["items"]]  # type: ignore
@@ -145,6 +154,7 @@ class Satchel(haddock.Entity):
 # ---------------------------------------------------------------------------
 # Inventory UI states
 # ---------------------------------------------------------------------------
+
 
 class SatchelsList(haddock.State):
     """
@@ -215,6 +225,7 @@ class SatchelItems(haddock.State):
 # Render commands
 # ---------------------------------------------------------------------------
 
+
 class SatchelsListRenderCommand(haddock.RenderCommand):
     """
     Payload for rendering the satchel list screen.
@@ -250,6 +261,7 @@ class SatchelItemsRenderCommand(haddock.RenderCommand):
 # Events
 # ---------------------------------------------------------------------------
 
+
 class OpenSatchelsEvent(haddock.EngineEvent):
     """Open the satchel list screen. Fired by the "Check satchel" action."""
 
@@ -279,6 +291,7 @@ class CloseSatchelItemsEvent(haddock.Event):
 # Riders
 # ---------------------------------------------------------------------------
 
+
 class SatchelsListRider(haddock.StateRider[SatchelsList]):
     """Renders the satchel list and handles its close event."""
 
@@ -289,9 +302,9 @@ class SatchelsListRider(haddock.StateRider[SatchelsList]):
             haddock.chieftain.mail_event(haddock.PopStateEvent())
 
     def render(self, state: SatchelsList) -> haddock.RenderCommand:
-        return SatchelsListRenderCommand([
-            ("My satchel", haddock.EntityID("haddock", "player", "player"))
-        ])
+        return SatchelsListRenderCommand(
+            [("My satchel", haddock.EntityID("haddock", "player", "player"))]
+        )
 
 
 class SatchelItemsRider(haddock.StateRider[SatchelItems]):
@@ -311,7 +324,9 @@ class SatchelItemsRider(haddock.StateRider[SatchelItems]):
         padded = satchel.items + [
             NoItem() for _ in range(satchel.capacity - len(satchel.items))
         ]
-        return SatchelItemsRenderCommand(f"Satchel ({satchel.capacity} items)", padded)
+        return SatchelItemsRenderCommand(
+            f"Satchel ({satchel.capacity} items)", padded
+        )
 
 
 class OpenSatchelsEventRider(haddock.EventRider[OpenSatchelsEvent]):
@@ -329,12 +344,15 @@ class OpenSatchelItemsEventRider(haddock.EventRider[OpenSatchelItemsEvent]):
     event_type = OpenSatchelItemsEvent
 
     def roll_call(self, event: OpenSatchelItemsEvent) -> None:
-        haddock.chieftain.mail_event(haddock.AppendStateEvent(SatchelItems(event.satchel)))
+        haddock.chieftain.mail_event(
+            haddock.AppendStateEvent(SatchelItems(event.satchel))
+        )
 
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def get_satchel(owner: haddock.EntityID) -> haddock.EntityID:
     """
@@ -382,7 +400,9 @@ def _deserialize_item(data: haddock.JSONValue) -> BaseItem:
     Selects the correct subclass by tag, then calls its deserialize().
     """
     if not isinstance(data, dict) or "tag" not in data:
-        raise haddock.DeserializeException(f"Expected dict with 'tag' for item, got {data!r}")
+        raise haddock.DeserializeException(
+            f"Expected dict with 'tag' for item, got {data!r}"
+        )
     tag = data["tag"]
     cls = _ITEM_REGISTRY.get(tag)  # type: ignore
     if cls is None:

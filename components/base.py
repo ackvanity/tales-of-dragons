@@ -7,10 +7,19 @@ Textual's button press events to the haddock engine event system.
 
 from textual.widgets import Button
 from textual.reactive import reactive
+from librarians.tcss import load_tcss_file
 import haddock
 
+class TCSS:
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
 
-class EventEmitButton(Button):
+        module = '/'.join(cls.__module__.split('.')[1:])
+        name = cls.__name__
+        
+        cls.DEFAULT_CSS = load_tcss_file(module, name)
+
+class EventEmitButton(Button, TCSS):
     """
     A Textual Button that fires a haddock.Event when pressed.
 
@@ -24,7 +33,9 @@ class EventEmitButton(Button):
 
     event: reactive[haddock.Event] = reactive(haddock.Event())
 
-    def __init__(self, line: str = "", haddock_event: haddock.Event = haddock.Event()) -> None:
+    def __init__(
+        self, line: str = "", haddock_event: haddock.Event = haddock.Event()
+    ) -> None:
         """
         Args:
             line:          The button label shown to the player.

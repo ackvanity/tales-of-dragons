@@ -14,10 +14,10 @@ from typing import List, Type
 import haddock
 from dragonic.base import Syscall
 
-
 # ---------------------------------------------------------------------------
 # Syscall types (yielded by helper functions below)
 # ---------------------------------------------------------------------------
+
 
 class StorySyscall(Syscall):
     """Base class for syscalls that produce visible output to the player."""
@@ -60,6 +60,7 @@ class AddCharacterHookSyscall(StorySyscall):
 # Result types
 # ---------------------------------------------------------------------------
 
+
 class DialogueResult(haddock.Serializable):
     """
     The result returned from send_prompt().
@@ -86,15 +87,20 @@ class DialogueResult(haddock.Serializable):
         return {"index": self.index, "text": self.text}
 
     @classmethod
-    def deserialize(cls: Type["DialogueResult"], data: haddock.JSONValue) -> "DialogueResult":
+    def deserialize(
+        cls: Type["DialogueResult"], data: haddock.JSONValue
+    ) -> "DialogueResult":
         if not isinstance(data, dict):
-            raise haddock.DeserializeException(f"Expected dict for DialogueResult, got {data!r}")
+            raise haddock.DeserializeException(
+                f"Expected dict for DialogueResult, got {data!r}"
+            )
         return cls(index=data["index"], text=data["text"])  # type: ignore
 
 
 # ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
+
 
 async def send_dialogue(speaker: str, line: str) -> None:
     """

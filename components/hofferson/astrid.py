@@ -52,7 +52,9 @@ class TalkingRenderChief(haddock.RenderChief[TalkingRenderCommand]):
 
     command_type = TalkingRenderCommand
 
-    def render(self, command: TalkingRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self, command: TalkingRenderCommand, application: TextualApplication
+    ) -> None:
         async def _render() -> None:
             await application.ensure_singleton(Story)
             story = application.get_story()

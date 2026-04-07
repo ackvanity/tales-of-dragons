@@ -35,6 +35,7 @@ injected into location menus, for consistency with the module protocol.
 # Events
 # ---------------------------------------------------------------------------
 
+
 class LocationTeleportEventBase:
     """Shared payload for location teleport events."""
 
@@ -44,7 +45,9 @@ class LocationTeleportEventBase:
         self.to = to
 
 
-class LocationTeleportEngineEvent(LocationTeleportEventBase, haddock.EngineEvent):
+class LocationTeleportEngineEvent(
+    LocationTeleportEventBase, haddock.EngineEvent
+):
     """
     Engine event that pushes a Wandering state for the target location.
 
@@ -62,7 +65,9 @@ class LocationTeleportEngineEvent(LocationTeleportEventBase, haddock.EngineEvent
     @classmethod
     def deserialize(cls, data: haddock.JSONValue) -> "LocationTeleportEngineEvent":  # type: ignore
         if not isinstance(data, str):
-            raise haddock.DeserializeException(f"Expected str for LocationTeleportEngineEvent, got {data!r}")
+            raise haddock.DeserializeException(
+                f"Expected str for LocationTeleportEngineEvent, got {data!r}"
+            )
         return cls(data)
 
 
@@ -78,6 +83,7 @@ class LocationTeleportEvent(LocationTeleportEventBase, haddock.Event):
 # ---------------------------------------------------------------------------
 # Entities
 # ---------------------------------------------------------------------------
+
 
 class Location(haddock.Entity):
     """
@@ -110,14 +116,20 @@ class Location(haddock.Entity):
     def _serialize(self) -> haddock.JSONValue:
         return {
             "id": self.id,
-            "extra_location_actions": [a.serialize() for a in self.extra_location_actions],
+            "extra_location_actions": [
+                a.serialize() for a in self.extra_location_actions
+            ],
         }
 
     @classmethod
-    def _deserialize(cls: type["Location"], data: haddock.JSONValue, version: int) -> "Location":
+    def _deserialize(
+        cls: type["Location"], data: haddock.JSONValue, version: int
+    ) -> "Location":
         if version == 1:
             if not isinstance(data, dict):
-                raise haddock.DeserializeException(f"Expected dict for Location, got {data!r}")
+                raise haddock.DeserializeException(
+                    f"Expected dict for Location, got {data!r}"
+                )
             obj = cls(data["id"])  # type: ignore
             obj.extra_location_actions = [
                 Action.deserialize(a) for a in data.get("extra_location_actions", [])  # type: ignore
@@ -139,19 +151,25 @@ class Location(haddock.Entity):
         """
         action_list: list[Action] = list(self.extra_location_actions)
 
-        for action in librarian.parse_location_data(core.get_data(f"location/{self.id}")).actions:
-            action_list.append(Action(
-                line=action.line,
-                signal=evaluator.parse_event(action.event),
-            ))
+        for action in librarian.parse_location_data(
+            core.get_data(f"location/{self.id}")
+        ).actions:
+            action_list.append(
+                Action(
+                    line=action.line,
+                    signal=evaluator.parse_event(action.event),
+                )
+            )
 
         for human in get_humans():
             character = astrid.get_human(human)
             if character.location == self.id:
-                action_list.append(Action(
-                    line=f"Hi there {character.name}!",
-                    signal=astrid.HumanInteractEngineEvent(character.id),
-                ))
+                action_list.append(
+                    Action(
+                        line=f"Hi there {character.name}!",
+                        signal=astrid.HumanInteractEngineEvent(character.id),
+                    )
+                )
 
         return action_list
 
@@ -159,13 +177,16 @@ class Location(haddock.Entity):
     def ambient(self) -> str:
         """Return a random ambient description line for this location."""
         return random.choice(
-            librarian.parse_location_data(core.get_data(f"location/{self.id}")).ambient
+            librarian.parse_location_data(
+                core.get_data(f"location/{self.id}")
+            ).ambient
         )
 
 
 # ---------------------------------------------------------------------------
 # States
 # ---------------------------------------------------------------------------
+
 
 class Wandering(haddock.State):
     """
@@ -188,9 +209,13 @@ class Wandering(haddock.State):
         return self.to
 
     @classmethod
-    def _deserialize(cls: type["Wandering"], data: haddock.JSONValue, version: int) -> "Wandering":
+    def _deserialize(
+        cls: type["Wandering"], data: haddock.JSONValue, version: int
+    ) -> "Wandering":
         if not isinstance(data, str):
-            raise haddock.DeserializeException(f"Expected str for Wandering.to, got {data!r}")
+            raise haddock.DeserializeException(
+                f"Expected str for Wandering.to, got {data!r}"
+            )
         return cls(data)
 
     @staticmethod
@@ -201,6 +226,7 @@ class Wandering(haddock.State):
 # ---------------------------------------------------------------------------
 # Render command
 # ---------------------------------------------------------------------------
+
 
 class WanderingRenderCommand(haddock.RenderCommand):
     """
@@ -226,6 +252,7 @@ class WanderingRenderCommand(haddock.RenderCommand):
 # Riders
 # ---------------------------------------------------------------------------
 
+
 class LocationRider(haddock.EntityRider[Location]):
     """Entity rider for Location. Currently a no-op placeholder."""
 
@@ -241,7 +268,9 @@ class LocationTeleportRider(haddock.EventRider[LocationTeleportEngineEvent]):
     event_type = LocationTeleportEngineEvent
 
     def roll_call(self, event: LocationTeleportEngineEvent) -> None:
-        haddock.chieftain.mail_event(haddock.AppendStateEvent(Wandering(event.to)))
+        haddock.chieftain.mail_event(
+            haddock.AppendStateEvent(Wandering(event.to))
+        )
 
 
 class WanderingRider(haddock.StateRider[Wandering]):
@@ -269,6 +298,7 @@ class WanderingRider(haddock.StateRider[Wandering]):
 # Helpers
 # ---------------------------------------------------------------------------
 
+
 def get_location(id: str) -> Location:
     """
     Return the Location entity for the given location id, creating it if absent.
@@ -285,7 +315,11 @@ def get_location(id: str) -> Location:
 # Module exports
 # ---------------------------------------------------------------------------
 
-riders: haddock.Riders = [LocationRider(), WanderingRider(), LocationTeleportRider()]
+riders: haddock.Riders = [
+    LocationRider(),
+    WanderingRider(),
+    LocationTeleportRider(),
+]
 chiefs: haddock.Chiefs = []
 
 # Register all events that appear as Action.signal or inside EventSeries

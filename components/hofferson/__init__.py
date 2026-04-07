@@ -14,9 +14,10 @@ from textual.widget import Widget
 from textual.containers import HorizontalGroup, VerticalScroll, VerticalGroup
 from textual.reactive import reactive
 from typing import List
+from components.base import EventEmitButton, TCSS
 
 
-class Dialogue(HorizontalGroup):
+class Dialogue(HorizontalGroup, TCSS):
     """
     A single line of character dialogue displayed as "Speaker  Line".
 
@@ -37,11 +38,11 @@ class Dialogue(HorizontalGroup):
         self.line = line
 
     def compose(self) -> ComposeResult:
-        yield Label(self.speaker)
-        yield Label(self.line)
+        yield Label(self.speaker, classes="speaker")
+        yield Label(self.line, classes="line")
 
 
-class Paragraph(Label):
+class Paragraph(Label, TCSS):
     """
     A narration paragraph with no attributed speaker.
 
@@ -49,7 +50,7 @@ class Paragraph(Label):
     """
 
 
-class Story(VerticalScroll):
+class Story(VerticalScroll, TCSS):
     """
     The main scrolling content container that accumulates narrative nodes.
 
@@ -84,7 +85,7 @@ class Story(VerticalScroll):
             yield self.nodes[-1]
 
 
-class Prompt(VerticalGroup):
+class Prompt(VerticalGroup, TCSS):
     """
     A vertically stacked group of EventEmitButtons for player choices.
 
@@ -95,7 +96,7 @@ class Prompt(VerticalGroup):
         options: List of EventEmitButton widgets, one per choice.
     """
 
-    options: reactive[List[Widget]]
+    options: reactive[List[EventEmitButton]]
 
     def __init__(self) -> None:
         super().__init__()

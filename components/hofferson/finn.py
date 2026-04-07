@@ -52,7 +52,9 @@ class WanderingRenderChief(haddock.RenderChief[WanderingRenderCommand]):
 
     command_type = WanderingRenderCommand
 
-    def render(self, command: WanderingRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self, command: WanderingRenderCommand, application: TextualApplication
+    ) -> None:
         async def _render() -> None:
             await application.ensure_singleton(Story)
             story = application.get_story()

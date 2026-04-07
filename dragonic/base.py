@@ -60,7 +60,13 @@ KeyLike = int | bool | str | haddock.EntityID
 # haddock does not import dragonic, so this direction is safe.
 from dragonic.interactions import DialogueResult as _DialogueResult
 
-ValueLike = haddock.EntityID | haddock.Entity | haddock.State | haddock.JSONValue | _DialogueResult
+ValueLike = (
+    haddock.EntityID
+    | haddock.Entity
+    | haddock.State
+    | haddock.JSONValue
+    | _DialogueResult
+)
 """Valid value types that can flow through the Dragonic data stream."""
 
 

@@ -86,10 +86,16 @@ class SatchelsListRenderChief(haddock.RenderChief[SatchelsListRenderCommand]):
 
     command_type = SatchelsListRenderCommand
 
-    def render(self, command: SatchelsListRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self,
+        command: SatchelsListRenderCommand,
+        application: TextualApplication,
+    ) -> None:
         async def _render() -> None:
             await application.clear_history()
-            await application.get_mount_point().mount(SatchelList(command.satchels))
+            await application.get_mount_point().mount(
+                SatchelList(command.satchels)
+            )
 
         asyncio.create_task(_render())
 
@@ -104,9 +110,15 @@ class SatchelItemsRenderChief(haddock.RenderChief[SatchelItemsRenderCommand]):
 
     command_type = SatchelItemsRenderCommand
 
-    def render(self, command: SatchelItemsRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self,
+        command: SatchelItemsRenderCommand,
+        application: TextualApplication,
+    ) -> None:
         async def _render() -> None:
             await application.clear_history()
-            await application.get_mount_point().mount(SatchelItems(command.title, command.items))
+            await application.get_mount_point().mount(
+                SatchelItems(command.title, command.items)
+            )
 
         asyncio.create_task(_render())

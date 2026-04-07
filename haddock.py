@@ -16,6 +16,7 @@ from typing import Callable, TypeAlias, TypeVar, Generic, Type, Union
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
+import json
 
 # ---------------------------------------------------------------------------
 # Type variables used for generic rider / serialization bounds
@@ -39,9 +40,18 @@ JSONObject = dict[str, JSONValue]
 JSONArray = list[JSONValue]
 
 
+def is_json(obj):
+    try:
+        json.dumps(obj)
+        return True
+    except TypeError:
+        return False
+
+
 # ---------------------------------------------------------------------------
 # Serialization interface
 # ---------------------------------------------------------------------------
+
 
 class Serializable(ABC):
     """
@@ -107,7 +117,9 @@ class State(Serializable):
     def deserialize(cls: Type[S], data: JSONValue) -> S:
         """Reconstruct a State from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+            raise DeserializeException(
+                f"Expected [version, payload], got {data!r}"
+            )
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -150,7 +162,9 @@ class Entity(Serializable):
     def deserialize(cls: Type[E], data: JSONValue) -> E:
         """Reconstruct an Entity from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+            raise DeserializeException(
+                f"Expected [version, payload], got {data!r}"
+            )
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -189,13 +203,16 @@ class EntityID(Serializable):
     def deserialize(cls, data: JSONValue) -> "EntityID":
         """Reconstruct an EntityID from [clan, species, name]."""
         if not isinstance(data, list) or len(data) < 3:
-            raise DeserializeException(f"Expected [clan, species, name], got {data!r}")
+            raise DeserializeException(
+                f"Expected [clan, species, name], got {data!r}"
+            )
         return cls(data[0], data[1], data[2])  # type: ignore
 
 
 # ---------------------------------------------------------------------------
 # Events
 # ---------------------------------------------------------------------------
+
 
 class Event(Serializable):
     """
@@ -308,13 +325,16 @@ class EventSeries(EngineEvent):
     @classmethod
     def deserialize(cls: Type["EventSeries"], data: JSONValue) -> "EventSeries":  # type: ignore
         if not isinstance(data, list):
-            raise DeserializeException(f"Expected list for EventSeries, got {data!r}")
+            raise DeserializeException(
+                f"Expected list for EventSeries, got {data!r}"
+            )
         return cls([deserialize_event(item) for item in data])
 
 
 # ---------------------------------------------------------------------------
 # Application interface
 # ---------------------------------------------------------------------------
+
 
 class Application(ABC):
     """
@@ -339,6 +359,7 @@ class Application(ABC):
 # Render pipeline
 # ---------------------------------------------------------------------------
 
+
 class RenderCommand:
     """
     Data transfer object produced by a StateRider and consumed by a RenderChief.
@@ -356,6 +377,7 @@ class RenderingException(Exception):
 # Serialization exceptions
 # ---------------------------------------------------------------------------
 
+
 class DeserializeException(Exception):
     """Raised when a serialized payload cannot be parsed."""
 
@@ -367,6 +389,7 @@ class DeserializeVersionUnsupportedException(DeserializeException):
 # ---------------------------------------------------------------------------
 # Rider / Chief interfaces
 # ---------------------------------------------------------------------------
+
 
 class StateRider(Generic[S], ABC):
     """
@@ -441,6 +464,7 @@ class RenderChief(Generic[C], ABC):
 # Test stub
 # ---------------------------------------------------------------------------
 
+
 class TestApplication(Application):
     """Minimal Application implementation for use in tests and debugging."""
 
@@ -461,6 +485,7 @@ class TestApplication(Application):
 # ---------------------------------------------------------------------------
 # Engine runner
 # ---------------------------------------------------------------------------
+
 
 class Hiccup:
     """
@@ -621,7 +646,9 @@ class Hiccup:
         self.event_queue.append(event)
         self._dispatch_events()
 
-    def enroll_rider(self, rider: "StateRider | EntityRider | EventRider") -> None:
+    def enroll_rider(
+        self, rider: "StateRider | EntityRider | EventRider"
+    ) -> None:
         """Register a rider. Called automatically by register_clan()."""
         if isinstance(rider, StateRider):
             self.state_riders.append(rider)
@@ -663,6 +690,7 @@ class Hiccup:
         Raises DeserializeException (indirectly) if a type is not registered.
         """
         import json, os
+
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
         states_out: JSONArray = [
@@ -670,7 +698,11 @@ class Hiccup:
             for state in self.states
         ]
         entities_out: JSONArray = [
-            {"id": eid.serialize(), "tag": entity.tag(), "data": entity.serialize()}
+            {
+                "id": eid.serialize(),
+                "tag": entity.tag(),
+                "data": entity.serialize(),
+            }
             for eid, entity in self.entities.items()
         ]
         payload: JSONObject = {"states": states_out, "entities": entities_out}
@@ -700,7 +732,9 @@ class Hiccup:
             tag = entry["tag"]
             cls = _STATE_REGISTRY.get(tag)
             if cls is None:
-                raise DeserializeException(f"Unknown state tag in save file: {tag!r}")
+                raise DeserializeException(
+                    f"Unknown state tag in save file: {tag!r}"
+                )
             self.states.append(cls.deserialize(entry["data"]))
 
         for entry in payload["entities"]:  # type: ignore
@@ -708,7 +742,9 @@ class Hiccup:
             tag = entry["tag"]
             cls = _ENTITY_REGISTRY.get(tag)
             if cls is None:
-                raise DeserializeException(f"Unknown entity tag in save file: {tag!r}")
+                raise DeserializeException(
+                    f"Unknown entity tag in save file: {tag!r}"
+                )
             self.entities[eid] = cls.deserialize(entry["data"])
 
     def call_entity(

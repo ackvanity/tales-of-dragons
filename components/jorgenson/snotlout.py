@@ -35,7 +35,9 @@ class PromptRenderChief(haddock.RenderChief[PromptRenderCommand]):
 
     command_type = PromptRenderCommand
 
-    def render(self, command: PromptRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self, command: PromptRenderCommand, application: TextualApplication
+    ) -> None:
         async def _render() -> None:
             await application.ensure_singleton(Story)
             story = application.get_story()
@@ -60,7 +62,9 @@ class DialogueRenderChief(haddock.RenderChief[DialogueRenderCommand]):
 
     command_type = DialogueRenderCommand
 
-    def render(self, command: DialogueRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self, command: DialogueRenderCommand, application: TextualApplication
+    ) -> None:
         async def _render() -> None:
             await application.ensure_singleton(Story)
             story = application.get_story()
@@ -83,7 +87,9 @@ class StoryRenderChief(haddock.RenderChief[StoryRenderCommand]):
 
     command_type = StoryRenderCommand
 
-    def render(self, command: StoryRenderCommand, application: TextualApplication) -> None:
+    def render(
+        self, command: StoryRenderCommand, application: TextualApplication
+    ) -> None:
         async def _render() -> None:
             await application.ensure_singleton(Story)
             story = application.get_story()

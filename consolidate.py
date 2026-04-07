@@ -19,7 +19,7 @@ for conn_id, conn in connections.items():
     # Prepare the action entry
     action_entry = {
         "line": action_text,
-        "event": f"finn.LocationTeleportEngineEvent('{dest}')"
+        "event": f"finn.LocationTeleportEngineEvent('{dest}')",
     }
 
     # Add to the source location's action list

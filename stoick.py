@@ -14,6 +14,7 @@ from components.hofferson import Story
 
 
 class TextualApplication(App):
+
     """
     The main Textual application.
 
