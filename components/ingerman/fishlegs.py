@@ -19,7 +19,7 @@ from clans.ingerman.fishlegs import (
 )
 from textual.app import ComposeResult
 from textual.widgets import Label
-from textual.containers import VerticalScroll
+from textual.containers import VerticalScroll, HorizontalGroup
 from textual.reactive import reactive
 from components.base import EventEmitButton, TCSS
 from stoick import TextualApplication
@@ -43,11 +43,28 @@ class SatchelList(VerticalScroll, TCSS):
         self.satchels = satchels
 
     def compose(self) -> ComposeResult:
+        yield Label("Satchels", classes="title")
         for name, event in self.satchels:
             yield EventEmitButton(name, event, classes="satchel")
         yield EventEmitButton(
             "Go Back.", CloseSatchelsListEvent(), classes="back"
         )
+
+
+class SatchelItem(HorizontalGroup):
+    def __init__(self, item: BaseItem) -> None:
+        super().__init__()
+        self.item = item
+
+    def compose(self) -> ComposeResult:
+        label = Label(self.item.name, classes="name", disabled=True)
+        label.can_focus = False
+        yield label
+        label = Label(
+            self.item.description, classes="description", disabled=True
+        )
+        label.can_focus = False
+        yield label
 
 
 class SatchelItems(VerticalScroll, TCSS):
@@ -71,11 +88,12 @@ class SatchelItems(VerticalScroll, TCSS):
         self.items = items
 
     def compose(self) -> ComposeResult:
-        yield Label(self.title)
+        yield Label(self.title, classes="title")
         for item in self.items:
-            yield Label(item.name)
-            yield Label(item.description)
-        yield EventEmitButton("Go Back.", CloseSatchelItemsEvent())
+            yield SatchelItem(item)
+        yield EventEmitButton(
+            "Go Back.", CloseSatchelItemsEvent(), classes="back"
+        )
 
 
 class SatchelsListRenderChief(haddock.RenderChief[SatchelsListRenderCommand]):

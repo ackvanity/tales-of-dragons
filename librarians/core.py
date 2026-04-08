@@ -15,6 +15,8 @@ SAVE_DIRECTORY = "saves"
 DATA_DIRECTORY = "data"
 """Root directory for all game content files."""
 
+TCSS_DIRECTORY = "tcss"
+
 
 def get_data(
     path: Iterable[str] | str,

@@ -1,8 +1,8 @@
-TCSS_PATH = "tcss"
+from librarians.core import TCSS_DIRECTORY
 
 
 def load_tcss_file(module, name):
-    path = "/".join([TCSS_PATH, module, name]) + ".tcss"
+    path = "/".join([TCSS_DIRECTORY, module, name]) + ".tcss"
     try:
         with open(path, "r") as file:
             return file.read()

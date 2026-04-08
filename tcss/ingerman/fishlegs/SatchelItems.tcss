@@ -1,4 +1,21 @@
-EventEmitButton {
+Label.title {
+  text-style: bold;
+}
+
+SatchelItem {
+  text-style: italic;
+
+  & Label.name {
+    width: 15;
+    text-style: italic bold;
+  }
+  
+  & Label.description {
+    width: 100%;
+  }
+}
+
+Button.back {
   background: transparent !important;
   border: none !important;
   padding: 0 !important;
@@ -12,8 +29,4 @@ EventEmitButton {
   &:hover {
     text-style: italic bold !important;
   }
-}
-
-Label.title {
-  text-style: bold;
 }
