@@ -538,4 +538,4 @@ No code changes required. The NPC will appear as an interactable option in their
 
 
 **TODO: Write about the TCSS system**
-**The color palette is at https://coolors.co/7c6c77-e59f71-d00000-0c1618-03254e**
+**The color palette is at https://coolors.co/7c6c77-e59f71-d00000-0c1618-03254e **
