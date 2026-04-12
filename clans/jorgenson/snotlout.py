@@ -537,6 +537,7 @@ class DragonicQuest(haddock.Entity):
 
     data_stream: List[dragonic.base.ValueLike]
     id: str
+    completed: bool
 
     def __init__(
         self,
@@ -546,6 +547,7 @@ class DragonicQuest(haddock.Entity):
         source = librarians.core.get_data(["quest", id], "py", False)  # type: ignore
         self.id = id
         self.data_stream = data_stream if data_stream is not None else []
+        self.completed = False
 
         namespace: dict = {}
         exec(source, namespace)  # type: ignore
@@ -624,6 +626,7 @@ class DragonicQuest(haddock.Entity):
     def step(
         self, data: dragonic.base.ValueLike, dispatch_events: bool = True
     ) -> None:
+        print(f"Advancing state with data {data}.")
         """
         Advance the quest coroutine one step by sending data into it.
 
@@ -638,6 +641,10 @@ class DragonicQuest(haddock.Entity):
         When dispatch_events=False (replay mode), syscalls are consumed
         without firing engine events.
         """
+        if self.completed:
+            print(f"Quest {self.id} is already completed!")
+            # return
+        
         try:
             if dispatch_events:
                 self.data_stream.append(data)
@@ -691,11 +698,15 @@ class DragonicQuest(haddock.Entity):
                     if syscall.path[1] == dragonic.base.Attr("health"):
                         return self.step(player.health)  # type: ignore
                 print(f"Unrecognized path: {syscall.path}")
+            
+            if isinstance(syscall, dragonic.base.NoOpSyscall):
+                # raise Exception("Got No-Op")
+                return
 
             raise RuntimeError(f"Unknown Syscall {syscall.__repr__()}")
 
         except StopIteration:
-            pass
+            self.completed = True
 
 
 class DragonicQuestRider(haddock.EntityRider[DragonicQuest]):

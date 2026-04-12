@@ -1,0 +1,25 @@
+TitleScreen {
+    width: 100%;
+    height: 100%;
+
+    & Label {
+        width: 100%;
+        text-align: center;
+    }
+
+    & Button#start_game {
+        background: transparent;
+        text-style: italic;
+        border: none;
+
+        padding: 1;
+        margin-top: 3;
+        background: #7C6C77;
+        width: 10;
+
+        &:hover {
+            background: #9F8F9A;
+            text-style: italic bold;
+        }
+    }
+}

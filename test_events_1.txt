@@ -1,4 +1,0 @@
-ingerman.OpenSatchelsEvent()
-ingerman.OpenSatchelItemsEvent(haddock.EntityID(clan='ingerman', species='satchel', name='1'))
-ingerman.CloseSatchelItemsEvent()
-ingerman.CloseSatchelsListEvent()

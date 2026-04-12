@@ -28,6 +28,8 @@ class Syscall:
         result = yield self
         return result
 
+class NoOpSyscall(Syscall):
+    """Syscall to send a no-op and suspend the Dragonic script. Requires manual resumption to continue the script. Only use if you know what you are doing"""
 
 class SendEventSyscall(Syscall):
     """Reserved syscall for directly sending an engine event (unused)."""

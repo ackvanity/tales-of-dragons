@@ -1,5 +1,10 @@
 #application {
+  min-height: 100%;
+  min-width: 100%;
   background: #E59F71;
+}
+
+* {
   color: #0C1618;
 }
 

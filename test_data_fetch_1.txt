@@ -1,4 +1,0 @@
-import librarians.hofferson.finn as finn
-import librarians.core as core
-core.get_data("location/berk_arena")
-loc = finn.parse_location_data(core.get_data("location/berk_arena"))

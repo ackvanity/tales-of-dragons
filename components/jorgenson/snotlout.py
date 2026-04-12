@@ -71,10 +71,18 @@ class DialogueRenderChief(haddock.RenderChief[DialogueRenderCommand]):
             if story is not None:
                 story.nodes.append(Dialogue(command.character, command.line))
                 story.refresh(recompose=True)
+                
+                # Send the event inside this function *after* Textual finishes
+                # loading, otherwise there could be a race condition between
+                # the Textual renderer and the next state's renderer system.
+                # PopStateEvent always pops the top of the stack, so always
+                # pop before sending the ReturnDataEvent and possibly inserting
+                # a new state. We send an EventSeries to ensure atomic operation
+                # and avoid rendering whatever state lies under the Dialogue state.
+                haddock.chieftain.mail_event(haddock.EventSeries([haddock.PopStateEvent(), ReturnDataEvent(None, command.script)]))
 
+        print("Rendering Dialogue")
         asyncio.create_task(_render())
-        haddock.chieftain.mail_event(ReturnDataEvent(None, command.script))
-        haddock.chieftain.mail_event(haddock.PopStateEvent())
 
 
 class StoryRenderChief(haddock.RenderChief[StoryRenderCommand]):
@@ -97,6 +105,8 @@ class StoryRenderChief(haddock.RenderChief[StoryRenderCommand]):
                 story.nodes.append(Paragraph(command.line))
                 story.refresh(recompose=True)
 
+                # This event is carefully structured
+                # See DialogueRenderChief
+                haddock.chieftain.mail_event(haddock.EventSeries([haddock.PopStateEvent(), ReturnDataEvent(None, command.script)]))
+
         asyncio.create_task(_render())
-        haddock.chieftain.mail_event(ReturnDataEvent(None, command.script))
-        haddock.chieftain.mail_event(haddock.PopStateEvent())
