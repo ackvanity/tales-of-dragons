@@ -1,3 +1,7 @@
+* {
+    color: #0C1618 !important;
+}
+
 EventEmitButton {
   background: transparent !important;
   border: none !important;

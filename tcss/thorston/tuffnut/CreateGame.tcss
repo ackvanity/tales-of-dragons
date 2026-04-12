@@ -1,0 +1,12 @@
+CreateGame {
+    & Input#name {
+        background: #BFAFBB;
+        color: #0C1618;
+    }
+
+    & Button#submit {
+        background: #03254E;
+        color: #BFAFBB !important;
+    }
+    
+}

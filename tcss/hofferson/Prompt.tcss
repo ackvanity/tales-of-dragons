@@ -4,6 +4,7 @@ Prompt > Button {
   padding: 0 !important;
   margin-bottom: 1 !important;
   text-style: italic !important;
+  color: #0C1618 !important;
 
   * {
     margin: 0 !important;

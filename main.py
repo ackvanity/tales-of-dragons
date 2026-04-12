@@ -13,7 +13,7 @@ import stoick
 from clans.hofferson import astrid, finn
 from clans.ingerman import fishlegs
 from clans.jorgenson import snotlout
-from clans.thorston.tuffnut import TitleScreen, SaveGameList
+from clans.thorston.tuffnut import TitleScreen, SaveGameList, CreateGame
 from clans.thorston import tuffnut
 from components.hofferson.astrid import TalkingRenderChief
 from components.hofferson.finn import WanderingRenderChief
@@ -125,6 +125,7 @@ tuffnut_c.start_game_func = init_game
 
 haddock.chieftain.states.append(TitleScreen())
 haddock.chieftain.states.append(SaveGameList())
+haddock.chieftain.states.append(CreateGame())
 
 
 # ---------------------------------------------------------------------------

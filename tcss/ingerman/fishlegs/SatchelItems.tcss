@@ -1,3 +1,7 @@
+* {
+    color: #0C1618 !important;
+}
+
 Label.title {
   text-style: bold;
 }
