@@ -34,7 +34,8 @@ from components.thorston.tuffnut import (
 from components.thorston import tuffnut as tuffnut_c
 from components.thorston.ruffnut import RuffnutInitiationStateRenderChief
 from clans.thorston import ruffnut
-import asyncio
+import uuid
+from librarians.core import SAVE_DIRECTORY
 
 # ---------------------------------------------------------------------------
 # Register module cross-injections
@@ -124,8 +125,6 @@ def _init_game(player_name):
 tuffnut_c.start_game_func = init_game
 
 haddock.chieftain.states.append(TitleScreen())
-haddock.chieftain.states.append(SaveGameList())
-haddock.chieftain.states.append(CreateGame())
 
 
 # ---------------------------------------------------------------------------
@@ -134,7 +133,18 @@ haddock.chieftain.states.append(CreateGame())
 
 haddock.chieftain.application.run()
 
-if init_player_name:
+if init_player_name or init_save_name:
+    assert init_player_name
+
+
     reset_app()
-    _init_game(init_player_name)
+
+    if init_player_name:
+        _init_game(init_player_name)
+        init_save_name = str(uuid.uuid4())
+    
+    save_path = SAVE_DIRECTORY + "/" + init_save_name + ".json" #type: ignore
+
     haddock.chieftain.application.run()
+    print(f"Saving game to {save_path}")
+    haddock.chieftain.save(save_path)

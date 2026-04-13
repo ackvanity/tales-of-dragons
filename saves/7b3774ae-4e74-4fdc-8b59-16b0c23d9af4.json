@@ -1,0 +1,282 @@
+{
+  "states": [
+    {
+      "tag": "hofferson.Wandering",
+      "data": [
+        1,
+        "berk_arena"
+      ]
+    },
+    {
+      "tag": "hofferson.Wandering",
+      "data": [
+        1,
+        "berk_square"
+      ]
+    }
+  ],
+  "entities": [
+    {
+      "id": [
+        "ingerman",
+        "satchel",
+        "1"
+      ],
+      "tag": "ingerman.Satchel",
+      "data": [
+        1,
+        {
+          "owner": [
+            "haddock",
+            "player",
+            "player"
+          ],
+          "capacity": 10,
+          "items": []
+        }
+      ]
+    },
+    {
+      "id": [
+        "jorgenson",
+        "player",
+        "player"
+      ],
+      "tag": "jorgenson.Player",
+      "data": [
+        1,
+        {
+          "name": "Ackhava",
+          "health": 100
+        }
+      ]
+    },
+    {
+      "id": [
+        "jorgenson",
+        "quest",
+        "rescue_hiccup_toothless"
+      ],
+      "tag": "jorgenson.DragonicQuest",
+      "data": [
+        1,
+        {
+          "id": "rescue_hiccup_toothless",
+          "data_stream": [
+            {
+              "type": "null"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": [
+        "jorgenson",
+        "quest",
+        "meet_hiccup"
+      ],
+      "tag": "jorgenson.DragonicQuest",
+      "data": [
+        1,
+        {
+          "id": "meet_hiccup",
+          "data_stream": [
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "dialogue_result",
+              "value": {
+                "index": 0,
+                "text": "Hi, I'm Ackhava!"
+              }
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "dialogue_result",
+              "value": {
+                "index": 0,
+                "text": "Well, I'm pretty good in crafting..."
+              }
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "null"
+            },
+            {
+              "type": "json",
+              "value": "Ackhava"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": [
+        "hofferson",
+        "human",
+        "hiccup"
+      ],
+      "tag": "hofferson.Human",
+      "data": [
+        1,
+        {
+          "id": "hiccup",
+          "name": "Hiccup",
+          "health": 100,
+          "location": "berk_square",
+          "extra_character_actions": [
+            {
+              "line": "Hey Hiccup, is that a new tailfin you got for Toothless?",
+              "signal": {
+                "tag": "haddock.EventSeries",
+                "payload": [
+                  {
+                    "tag": "hofferson.RemoveDialogueEvent",
+                    "payload": {
+                      "character": "hiccup",
+                      "id": "690df62f-be33-4e29-993c-53a402349ccb"
+                    }
+                  },
+                  {
+                    "tag": "jorgenson.ReturnDataEvent",
+                    "payload": {
+                      "data": {
+                        "type": "null"
+                      },
+                      "script": "rescue_hiccup_toothless"
+                    }
+                  }
+                ]
+              },
+              "condition": "True",
+              "id": "690df62f-be33-4e29-993c-53a402349ccb"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": [
+        "hofferson",
+        "location",
+        "berk_arena"
+      ],
+      "tag": "hofferson.Location",
+      "data": [
+        1,
+        {
+          "id": "berk_arena",
+          "extra_location_actions": []
+        }
+      ]
+    },
+    {
+      "id": [
+        "hofferson",
+        "human",
+        "astrid"
+      ],
+      "tag": "hofferson.Human",
+      "data": [
+        1,
+        {
+          "id": "astrid",
+          "name": "Astrid",
+          "health": 100,
+          "location": "berk_arena",
+          "extra_character_actions": []
+        }
+      ]
+    },
+    {
+      "id": [
+        "hofferson",
+        "location",
+        "berk_square"
+      ],
+      "tag": "hofferson.Location",
+      "data": [
+        1,
+        {
+          "id": "berk_square",
+          "extra_location_actions": []
+        }
+      ]
+    }
+  ]
+}

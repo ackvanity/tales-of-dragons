@@ -12,6 +12,7 @@ Button#new_viking, Button#back {
     text-style: italic;
     background: transparent;
     border: none;
+    color: #0C1618;
     
     &:hover {
         text-style: italic bold;

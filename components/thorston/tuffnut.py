@@ -65,7 +65,7 @@ class CreateGame(CenterMiddle, TCSS):
     def compose(self) -> ComposeResult:
         yield Dialogue("???", "Hi there. Uh, who *are* you?")
         yield (widget := Input(id="name"))
-        yield Button(id="submit")
+        yield Button("Hi, nice to meet you!", id="submit")
         self.widget = widget
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
