@@ -196,7 +196,7 @@ class Human(haddock.Entity):
             "health": self.health,
             "location": self.location,
             "extra_character_actions": [
-                a.serialize() for a in self.extra_character_actions
+                haddock.serialize(a) for a in self.extra_character_actions
             ],
         }
 
@@ -212,9 +212,9 @@ class Human(haddock.Entity):
             obj = cls(data["id"])  # type: ignore
             obj.health = data["health"]  # type: ignore
             obj.location = data["location"]  # type: ignore
-            obj.extra_character_actions = [
-                Action.deserialize(a) for a in data.get("extra_character_actions", [])  # type: ignore
-            ]
+            obj.extra_character_actions = [ # type: ignore
+                haddock.deserialize(a) for a in data.get("extra_character_actions", [])  # type: ignore
+            ] 
             return obj
         raise haddock.DeserializeVersionUnsupportedException()
 
@@ -425,11 +425,3 @@ riders: haddock.Riders = [
     AddDialogueEventRider(),
 ]
 chiefs: haddock.Chiefs = []
-
-# Register all events that appear as Action.signal or inside EventSeries
-haddock.register_event(HumanInteractEngineEvent)
-haddock.register_event(RemoveDialogueEvent)
-
-# Register serializable types with the engine type registries
-haddock.register_state(Talking)
-haddock.register_entity(Human)

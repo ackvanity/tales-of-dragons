@@ -117,7 +117,7 @@ class Location(haddock.Entity):
         return {
             "id": self.id,
             "extra_location_actions": [
-                a.serialize() for a in self.extra_location_actions
+                haddock.serialize(a) for a in self.extra_location_actions
             ],
         }
 
@@ -131,8 +131,8 @@ class Location(haddock.Entity):
                     f"Expected dict for Location, got {data!r}"
                 )
             obj = cls(data["id"])  # type: ignore
-            obj.extra_location_actions = [
-                Action.deserialize(a) for a in data.get("extra_location_actions", [])  # type: ignore
+            obj.extra_location_actions = [ # type: ignore
+                haddock.deserialize(a) for a in data.get("extra_location_actions", [])  # type: ignore
             ]
             return obj
         raise haddock.DeserializeVersionUnsupportedException()
@@ -321,10 +321,3 @@ riders: haddock.Riders = [
     LocationTeleportRider(),
 ]
 chiefs: haddock.Chiefs = []
-
-# Register all events that appear as Action.signal or inside EventSeries
-haddock.register_event(LocationTeleportEngineEvent)
-
-# Register serializable types with the engine type registries
-haddock.register_state(Wandering)
-haddock.register_entity(Location)

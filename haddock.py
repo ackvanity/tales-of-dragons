@@ -52,6 +52,8 @@ def is_json(obj):
 # Serialization interface
 # ---------------------------------------------------------------------------
 
+serialization_table: dict[str, type["Serializable"]] = {}
+
 
 class Serializable(ABC):
     """
@@ -77,6 +79,22 @@ class Serializable(ABC):
     @staticmethod
     @abstractmethod
     def tag() -> str: ...
+
+    def __init_subclass__(cls, **kwargs) -> None:
+        super().__init_subclass__(**kwargs)
+
+        serialization_table[cls.tag()] = cls
+
+
+def serialize(obj: Serializable) -> JSONValue:
+    return {"tag": obj.tag(), "data": obj.serialize()}
+
+
+def deserialize(obj: JSONValue) -> Serializable:
+    assert isinstance(obj, dict)
+    tag = obj["tag"]
+    cls = serialization_table[tag]  # type: ignore
+    return cls.deserialize(obj["data"])
 
 
 class State(Serializable):
@@ -231,14 +249,13 @@ class Event(Serializable):
         return {}
 
     def serialize(self) -> JSONValue:
-        """Return {"tag": ..., "payload": ...} envelope for storage."""
-        return {"tag": self.tag(), "payload": self._serialize_payload()}
+        return self._serialize_payload()
 
     @classmethod
     def deserialize(cls: Type[R], data: JSONValue) -> R:
         """
         Reconstruct from a payload dict (not the full envelope).
-        Called by deserialize_event() which has already stripped the tag.
+        Called by deserialize() which has already stripped the tag.
         Default: stateless, construct with no args.
         """
         return cls()  # type: ignore
@@ -320,7 +337,7 @@ class EventSeries(EngineEvent):
         return "haddock.EventSeries"
 
     def _serialize_payload(self) -> JSONValue:
-        return [e.serialize() for e in self.events]
+        return [serialize(e) for e in self.events]
 
     @classmethod
     def deserialize(cls: Type["EventSeries"], data: JSONValue) -> "EventSeries":  # type: ignore
@@ -328,7 +345,7 @@ class EventSeries(EngineEvent):
             raise DeserializeException(
                 f"Expected list for EventSeries, got {data!r}"
             )
-        return cls([deserialize_event(item) for item in data])
+        return cls([deserialize(item) for item in data]) # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -693,22 +710,13 @@ class Hiccup:
 
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
-        states_out: JSONArray = [
-            {"tag": state.tag(), "data": state.serialize()}
-            for state in self.states
-        ]
-        entities_out: JSONArray = [
-            {
-                "id": eid.serialize(),
-                "tag": entity.tag(),
-                "data": entity.serialize(),
-            }
-            for eid, entity in self.entities.items()
-        ]
-        payload: JSONObject = {"states": states_out, "entities": entities_out}
+        payload: JSONObject = {
+            "states": list(map(serialize, self.states)),
+            "entities": [[serialize(entityid), serialize(value)] for entityid, value in self.entities.items()],
+        }
 
         with open(path, "w") as f:
-            json.dump(payload, f, indent=2)
+            json.dump(payload, f, indent=None, separators=(',', ':'))
 
     def load(self, path: str) -> None:
         """
@@ -725,27 +733,8 @@ class Hiccup:
         with open(path, "r") as f:
             payload: JSONObject = json.load(f)
 
-        self.states.clear()
-        self.entities.clear()
-
-        for entry in payload["states"]:  # type: ignore
-            tag = entry["tag"]
-            cls = _STATE_REGISTRY.get(tag)
-            if cls is None:
-                raise DeserializeException(
-                    f"Unknown state tag in save file: {tag!r}"
-                )
-            self.states.append(cls.deserialize(entry["data"]))
-
-        for entry in payload["entities"]:  # type: ignore
-            eid = EntityID.deserialize(entry["id"])
-            tag = entry["tag"]
-            cls = _ENTITY_REGISTRY.get(tag)
-            if cls is None:
-                raise DeserializeException(
-                    f"Unknown entity tag in save file: {tag!r}"
-                )
-            self.entities[eid] = cls.deserialize(entry["data"])
+        self.states = list(map(deserialize, payload["states"]))  # type: ignore
+        self.entities = {deserialize(item[0]): deserialize(item[1]) for item in payload["entities"]} # type: ignore
 
     def call_entity(
         self,
@@ -798,83 +787,7 @@ Riders: TypeAlias = list[EventRider | StateRider | EntityRider]
 Chiefs: TypeAlias = list[RenderChief]
 """Type alias for the chiefs list exported by each clan module."""
 
-# ---------------------------------------------------------------------------
-# State and Entity type registries
-# ---------------------------------------------------------------------------
-
-_STATE_REGISTRY: dict[str, type[State]] = {}
-"""Maps tag strings to State subclasses for deserialization."""
-
-_ENTITY_REGISTRY: dict[str, type[Entity]] = {}
-"""Maps tag strings to Entity subclasses for deserialization."""
-
-
-def register_state(cls: type[State]) -> None:
-    """
-    Register a State subclass so Hiccup.load() can reconstruct it by tag.
-
-    Call once at module level after the class is defined, for every
-    concrete State subclass whose instances may appear in a save file.
-    """
-    _STATE_REGISTRY[cls.tag()] = cls
-
-
-def register_entity(cls: type[Entity]) -> None:
-    """
-    Register an Entity subclass so Hiccup.load() can reconstruct it by tag.
-
-    Call once at module level after the class is defined, for every
-    concrete Entity subclass whose instances may appear in a save file.
-    """
-    _ENTITY_REGISTRY[cls.tag()] = cls
-
-
-# ---------------------------------------------------------------------------
-# Event type registry
-# ---------------------------------------------------------------------------
-
-_EVENT_REGISTRY: dict[str, type[Event]] = {}
-"""Maps tag strings to Event subclasses for deserialization."""
-
-
-def register_event(cls: type[Event]) -> None:
-    """
-    Register an Event subclass in the global event registry.
-
-    Must be called for every Event subclass that can appear as an
-    Action.signal or inside an EventSeries.  Call once at module level,
-    after the class is defined.
-    """
-    _EVENT_REGISTRY[cls.tag()] = cls
-
-
-def deserialize_event(data: JSONValue) -> Event:
-    """
-    Reconstruct an Event from its serialized form.
-
-    Expects data to be a dict with a "tag" key whose value matches a
-    registered Event subclass, plus an optional "payload" key.
-
-    Raises DeserializeException if the tag is unknown or data is malformed.
-    """
-    if not isinstance(data, dict):
-        raise DeserializeException(f"Expected dict for event, got {data!r}")
-    tag = data.get("tag")
-    if not isinstance(tag, str):
-        raise DeserializeException(f"Event dict missing 'tag': {data!r}")
-    cls = _EVENT_REGISTRY.get(tag)
-    if cls is None:
-        raise DeserializeException(f"Unknown event tag: {tag!r}")
-    return cls.deserialize(data.get("payload", {}))  # type: ignore
-
-
-# Register built-in serializable events
-register_event(Event)
-register_event(EngineEvent)
-register_event(PopStateEvent)
-register_event(HaddockEvent)
-register_event(TeamAssembled)
-register_event(EventSeries)
+# We used to have a registry here, but now Serializable automatically registers all subclasses as serializable
 
 chieftain: Hiccup = None  # type: ignore
 """

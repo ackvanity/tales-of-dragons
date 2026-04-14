@@ -88,10 +88,12 @@ def init_game(player_name):
     init_player_name = player_name
     haddock.chieftain.application.exit()  # type: ignore
 
+
 def load_game(save_name):
     global init_save_name
     init_save_name = save_name
-    haddock.chieftain.application.exit() # type: ignore
+    haddock.chieftain.application.exit()  # type: ignore
+
 
 def reset_app():
     haddock.chieftain.application = stoick.TextualApplication()
@@ -129,9 +131,11 @@ def _init_game(player_name):
         haddock.EntityID("jorgenson", "quest", "meet_hiccup")
     ] = snotlout.DragonicQuest("meet_hiccup")
 
+
 def _load_game(save_path):
     reset_app()
     haddock.chieftain.load(save_path)
+
 
 tuffnut_c.start_game_func = init_game
 tuffnut_c.load_game_func = load_game
@@ -155,7 +159,6 @@ if init_player_name or init_save_name:
     else:
         save_path = SAVE_DIRECTORY + "/" + init_save_name  # type: ignore
         _load_game(save_path)
-
 
     haddock.chieftain.application.run()
     print(f"Saving game to {save_path}")

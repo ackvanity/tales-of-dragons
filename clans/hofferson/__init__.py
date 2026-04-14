@@ -43,7 +43,7 @@ class Action(haddock.Serializable):
     def serialize(self) -> haddock.JSONValue:
         return {
             "line": self.line,
-            "signal": self.signal.serialize(),
+            "signal": haddock.serialize(self.signal),
             "condition": self.condition,
             "id": self.id,
         }
@@ -56,7 +56,7 @@ class Action(haddock.Serializable):
             )
         return cls(
             line=data["line"],  # type: ignore
-            signal=haddock.deserialize_event(data["signal"]),
+            signal=haddock.deserialize(data["signal"]), # type: ignore
             condition=data.get("condition", "True"),  # type: ignore
             id=data.get("id", ""),  # type: ignore
         )

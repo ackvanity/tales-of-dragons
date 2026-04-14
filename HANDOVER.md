@@ -97,9 +97,6 @@ assigned to parameter "events" of type "list[Event] | None"
 ```
 This is a Python generic covariance limitation. It's pre-existing, benign at runtime, and tracked. Don't try to "fix" it by changing the type — it would require making the list immutable or restructuring the call site.
 
-### `BaseItem.serialize()` is overridden
-`BaseItem` overrides `Entity.serialize()` directly (not `_serialize`) to produce `{"tag": ..., "payload": [...]}`. This is intentional — items need their type tag embedded so `_deserialize_item()` in `fishlegs.py` can dispatch to the right subclass. Don't remove this override.
-
 ### Module registration order matters
 `Hiccup.load()` only works after all clan modules are imported, because `register_state()` / `register_entity()` / `register_event()` are called at module load time. In `main.py`, all clans are imported before the engine runs, so this is guaranteed. Don't move registrations inside functions or lazy-load modules.
 

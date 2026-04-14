@@ -100,6 +100,7 @@ class SaveGameListRider(haddock.StateRider[SaveGameList]):
 class CreateGameRenderCommand(haddock.RenderCommand):
     pass
 
+
 class CreateGameRider(haddock.StateRider[CreateGame]):
     state_type = CreateGame
 

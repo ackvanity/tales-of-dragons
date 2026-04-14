@@ -119,10 +119,10 @@ class ReturnDataEvent(haddock.Event):
     def _serialize_payload(self) -> haddock.JSONValue:
         if self.data is None:
             payload: haddock.JSONValue = {"type": "null"}
-        elif isinstance(self.data, dragonic.interactions.DialogueResult):
+        elif isinstance(self.data, haddock.Serializable):
             payload = {
-                "type": "dialogue_result",
-                "value": self.data.serialize(),
+                "type": "serializable",
+                "value": haddock.serialize(self.data)
             }
         else:
             payload = {"type": "json", "value": self.data}
@@ -145,10 +145,8 @@ class ReturnDataEvent(haddock.Event):
             value: haddock.JSONValue | dragonic.interactions.DialogueResult = (
                 None
             )
-        elif kind == "dialogue_result":
-            value = dragonic.interactions.DialogueResult.deserialize(
-                raw["value"]
-            )
+        elif kind == "serializable":
+            value = haddock.deserialize(raw["value"]) # type: ignore
         else:
             value = raw["value"]
         return cls(value, script)  # type: ignore
@@ -237,18 +235,17 @@ class Prompt(haddock.State):
     def _serialize(self) -> haddock.JSONValue:
         """Persist script only. Options contain Event objects and are reconstructed
         by the quest coroutine on replay."""
-        return self.script
+        return {
+            "script": self.script,
+            "options": [[action, haddock.serialize(event)] for action, event in self.options]
+        }
 
     @classmethod
     def _deserialize(
         cls: type["Prompt"], data: haddock.JSONValue, version: int
     ) -> "Prompt":
         if version == 1:
-            if not isinstance(data, str):
-                raise haddock.DeserializeException(
-                    f"Expected str for Prompt.script, got {data!r}"
-                )
-            return cls(options=None, script=data)
+            return cls(options=[(action, haddock.deserialize(event)) for action, event in data["options"]], script=data["script"]) # type: ignore
         raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
@@ -746,13 +743,3 @@ riders: haddock.Riders = [
 ]
 
 chiefs: haddock.Chiefs = []
-
-# Register all events that appear as Action.signal or inside EventSeries
-haddock.register_event(ReturnDataEvent)
-
-# Register serializable types with the engine type registries
-haddock.register_state(Prompt)
-haddock.register_state(Dialogue)
-haddock.register_state(Story)
-haddock.register_entity(Player)
-haddock.register_entity(DragonicQuest)

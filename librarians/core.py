@@ -57,8 +57,9 @@ def get_data(
 
 def parse_save_file(file: str) -> tuple[str, str] | None:
     try:
-        haddock.chieftain.load(f"{SAVE_DIRECTORY}/{file}")
-        name = haddock.chieftain.call_entity(haddock.EntityID("jorgenson", "player", "player")).name  # type: ignore
+        hiccup = haddock.Hiccup()
+        hiccup.load(f"{SAVE_DIRECTORY}/{file}")
+        name = hiccup.call_entity(haddock.EntityID("jorgenson", "player", "player")).name  # type: ignore
         return (file, name)
     except Exception as e:
         print(f"Cannot parse file f{file}. Exception: {e}")
@@ -66,7 +67,7 @@ def parse_save_file(file: str) -> tuple[str, str] | None:
 
 
 def get_save_files() -> list[tuple[str, str]]:
-    print('loaddragonsavefiles')
+    print("loaddragonsavefiles")
     files: list[tuple[str, str]] = []
     for save in os.listdir(f"{SAVE_DIRECTORY}"):
         print("parsefilefromsave")
