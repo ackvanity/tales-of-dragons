@@ -8,6 +8,8 @@ get_data(), which handles both JSON and raw text files.
 
 import json
 from typing import Iterable
+import haddock
+import os
 
 SAVE_DIRECTORY = "saves"
 """Directory where save files will be written (not yet implemented)."""
@@ -51,3 +53,25 @@ def get_data(
             return f.read()
     except FileNotFoundError:
         raise
+
+
+def parse_save_file(file: str) -> tuple[str, str] | None:
+    try:
+        haddock.chieftain.load(f"{SAVE_DIRECTORY}/{file}")
+        name = haddock.chieftain.call_entity(haddock.EntityID("jorgenson", "player", "player")).name  # type: ignore
+        return (file, name)
+    except Exception as e:
+        print(f"Cannot parse file f{file}. Exception: {e}")
+        return None
+
+
+def get_save_files() -> list[tuple[str, str]]:
+    print('loaddragonsavefiles')
+    files: list[tuple[str, str]] = []
+    for save in os.listdir(f"{SAVE_DIRECTORY}"):
+        print("parsefilefromsave")
+        print(save)
+        parsed = parse_save_file(save)
+        if parsed:
+            files.append(parsed)
+    return files

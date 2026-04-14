@@ -553,8 +553,8 @@ class DragonicQuest(haddock.Entity):
         exec(source, namespace)  # type: ignore
         self.coro = namespace["main"]()
 
-        for data in self.data_stream:
-            self.step(data, dispatch_events=False)
+        # for data in self.data_stream:
+        #     self.step(data, dispatch_events=False)
 
     @property
     def version(self) -> int:
@@ -644,7 +644,7 @@ class DragonicQuest(haddock.Entity):
         if self.completed:
             print(f"Quest {self.id} is already completed!")
             # return
-        
+
         try:
             if dispatch_events:
                 self.data_stream.append(data)
@@ -698,7 +698,7 @@ class DragonicQuest(haddock.Entity):
                     if syscall.path[1] == dragonic.base.Attr("health"):
                         return self.step(player.health)  # type: ignore
                 print(f"Unrecognized path: {syscall.path}")
-            
+
             if isinstance(syscall, dragonic.base.NoOpSyscall):
                 # raise Exception("Got No-Op")
                 return
@@ -723,10 +723,12 @@ class DragonicQuestRider(haddock.EntityRider[DragonicQuest]):
     def roll_call(self, entity: DragonicQuest, event: haddock.Event) -> None:
         if isinstance(event, ReturnDataEvent) and event.script == entity.id:
             entity.step(event.data)
-        if isinstance(event, haddock.TeamAssembled) and not len(
-            entity.data_stream
-        ):
-            entity.step(None)
+        if isinstance(event, haddock.TeamAssembled):
+            if len(entity.data_stream):
+                for data in entity.data_stream:
+                    entity.step(data, dispatch_events=False)
+            else:
+                entity.step(None)
 
 
 # ---------------------------------------------------------------------------

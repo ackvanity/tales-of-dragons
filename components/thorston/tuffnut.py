@@ -8,7 +8,8 @@ from clans.thorston.tuffnut import (
     CreateGameRenderCommand,
 )
 from components.hofferson.astrid import Dialogue
-from textual.containers import CenterMiddle, Center
+from textual.containers import CenterMiddle, Center, Container
+from textual.reactive import Reactive
 import haddock
 import asyncio
 from components.base import TCSS, EventEmitButton
@@ -40,8 +41,26 @@ class TitleScreenRenderChief(haddock.RenderChief[TitleScreenRenderCommand]):
 
 
 class SaveGameList(CenterMiddle, TCSS):
+    class StartGameButton(Button):
+        def __init__(self, *args, save: str = "", **kwargs):
+            super().__init__(*args, **kwargs)
+            self.save = save
+        
+        def on_button_pressed(self, event):
+            load_game_func(self.save)
+
+    saves: Reactive[list[tuple[str, str]]]
+
+    def __init__(self, *args, saves: list[tuple[str, str]] = [], **kwargs):
+        super().__init__(*args, **kwargs)
+        self.saves = saves
+
     def compose(self) -> ComposeResult:
         yield Label("So, whose adventure will you continue?", id="title")
+        for save in self.saves:
+            with Container(classes="save"):
+                yield Label(save[1], classes="name")
+                yield self.StartGameButton("Play", classes="play_game", save=save[0])
         yield EventEmitButton(
             "New Viking",
             haddock.AppendStateEvent(CreateGameState()),
@@ -56,7 +75,7 @@ class SaveGameListRenderChief(haddock.RenderChief[SaveGameListRenderCommand]):
     def render(self, command: SaveGameListRenderCommand, application) -> None:
         async def _render() -> None:
             await application.clear_history()
-            await application.get_mount_point().mount(SaveGameList())
+            await application.get_mount_point().mount(SaveGameList(saves=command.saves))
 
         asyncio.create_task(_render())
 
@@ -82,4 +101,6 @@ class CreateGameRenderChief(haddock.RenderChief[CreateGameRenderCommand]):
 
         asyncio.create_task(_render())
 
+
 start_game_func = lambda n: None
+load_game_func = lambda s: None

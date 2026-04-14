@@ -8,10 +8,10 @@
       ]
     },
     {
-      "tag": "hofferson.Talking",
+      "tag": "jorgenson.Prompt",
       "data": [
         1,
-        "astrid"
+        "meet_hiccup"
       ]
     }
   ],
@@ -94,92 +94,6 @@
             {
               "type": "json",
               "value": "Ackhava"
-            },
-            {
-              "type": "dialogue_result",
-              "value": {
-                "index": 0,
-                "text": "Hi, I'm Ackhava!"
-              }
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "dialogue_result",
-              "value": {
-                "index": 0,
-                "text": "Well, I'm pretty good in crafting..."
-              }
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "null"
-            },
-            {
-              "type": "json",
-              "value": "Ackhava"
-            },
-            {
-              "type": "null"
             }
           ]
         }
@@ -209,7 +123,7 @@
                     "tag": "hofferson.RemoveDialogueEvent",
                     "payload": {
                       "character": "hiccup",
-                      "id": "78f00b79-45a7-40bd-9734-cd3a3766a16b"
+                      "id": "003b486e-c2a8-436f-b93e-6a473398d596"
                     }
                   },
                   {
@@ -224,42 +138,9 @@
                 ]
               },
               "condition": "True",
-              "id": "78f00b79-45a7-40bd-9734-cd3a3766a16b"
+              "id": "003b486e-c2a8-436f-b93e-6a473398d596"
             }
           ]
-        }
-      ]
-    },
-    {
-      "id": [
-        "hofferson",
-        "location",
-        "berk_arena"
-      ],
-      "tag": "hofferson.Location",
-      "data": [
-        1,
-        {
-          "id": "berk_arena",
-          "extra_location_actions": []
-        }
-      ]
-    },
-    {
-      "id": [
-        "hofferson",
-        "human",
-        "astrid"
-      ],
-      "tag": "hofferson.Human",
-      "data": [
-        1,
-        {
-          "id": "astrid",
-          "name": "Astrid",
-          "health": 100,
-          "location": "berk_arena",
-          "extra_character_actions": []
         }
       ]
     }

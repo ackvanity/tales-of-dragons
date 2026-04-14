@@ -82,15 +82,22 @@ haddock.chieftain.declare_chief(RuffnutInitiationStateRenderChief())
 init_player_name = None
 init_save_name = None
 
+
 def init_game(player_name):
     global init_player_name
     init_player_name = player_name
+    haddock.chieftain.application.exit()  # type: ignore
+
+def load_game(save_name):
+    global init_save_name
+    init_save_name = save_name
     haddock.chieftain.application.exit() # type: ignore
 
 def reset_app():
     haddock.chieftain.application = stoick.TextualApplication()
     haddock.chieftain.states.clear()
     haddock.chieftain.entities.clear()
+
 
 def _init_game(player_name):
     # Restart the application
@@ -122,7 +129,12 @@ def _init_game(player_name):
         haddock.EntityID("jorgenson", "quest", "meet_hiccup")
     ] = snotlout.DragonicQuest("meet_hiccup")
 
+def _load_game(save_path):
+    reset_app()
+    haddock.chieftain.load(save_path)
+
 tuffnut_c.start_game_func = init_game
+tuffnut_c.load_game_func = load_game
 
 haddock.chieftain.states.append(TitleScreen())
 
@@ -134,16 +146,16 @@ haddock.chieftain.states.append(TitleScreen())
 haddock.chieftain.application.run()
 
 if init_player_name or init_save_name:
-    assert init_player_name
-
-
     reset_app()
 
     if init_player_name:
         _init_game(init_player_name)
         init_save_name = str(uuid.uuid4())
-    
-    save_path = SAVE_DIRECTORY + "/" + init_save_name + ".json" #type: ignore
+        save_path = SAVE_DIRECTORY + "/" + init_save_name  # type: ignore
+    else:
+        save_path = SAVE_DIRECTORY + "/" + init_save_name  # type: ignore
+        _load_game(save_path)
+
 
     haddock.chieftain.application.run()
     print(f"Saving game to {save_path}")

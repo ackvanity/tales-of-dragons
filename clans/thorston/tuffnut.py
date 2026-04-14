@@ -1,5 +1,6 @@
 from typing import Type
 import haddock
+from librarians.core import get_save_files
 
 
 class TitleScreen(haddock.State):
@@ -80,9 +81,9 @@ class TitleScreenRider(haddock.StateRider[TitleScreen]):
 
 
 class SaveGameListRenderCommand(haddock.RenderCommand):
-    saves: list[tuple[str, str, str]]
+    saves: list[tuple[str, str]]
 
-    def __init__(self, saves: list[tuple[str, str, str]]):
+    def __init__(self, saves: list[tuple[str, str]]):
         self.saves = saves
 
 
@@ -93,15 +94,11 @@ class SaveGameListRider(haddock.StateRider[SaveGameList]):
         pass
 
     def render(self, state: SaveGameList) -> SaveGameListRenderCommand:
-        return SaveGameListRenderCommand([])
+        return SaveGameListRenderCommand(get_save_files())
 
 
 class CreateGameRenderCommand(haddock.RenderCommand):
-    saves: list[tuple[str, str, str]]
-
-    def __init__(self, saves: list[tuple[str, str, str]]):
-        self.saves = saves
-
+    pass
 
 class CreateGameRider(haddock.StateRider[CreateGame]):
     state_type = CreateGame
@@ -110,7 +107,7 @@ class CreateGameRider(haddock.StateRider[CreateGame]):
         pass
 
     def render(self, state: CreateGame) -> CreateGameRenderCommand:
-        return CreateGameRenderCommand([])
+        return CreateGameRenderCommand()
 
 
 riders: haddock.Riders = [
