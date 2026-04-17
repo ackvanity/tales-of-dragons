@@ -56,7 +56,7 @@ class Action(haddock.Serializable):
             )
         return cls(
             line=data["line"],  # type: ignore
-            signal=haddock.deserialize(data["signal"]), # type: ignore
+            signal=haddock.deserialize(data["signal"]),  # type: ignore
             condition=data.get("condition", "True"),  # type: ignore
             id=data.get("id", ""),  # type: ignore
         )

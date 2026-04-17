@@ -31,10 +31,6 @@ class BaseItem(haddock.Entity):
     name: str
     description: str
 
-    def serialize(self) -> haddock.JSONValue:
-        """Return {"tag": ..., "payload": [version, _serialize()]} for type-tagged storage."""
-        return {"tag": self.tag(), "payload": [self.version, self._serialize()]}
-
 
 class Item(BaseItem):
     """A generic placeholder item with no special behaviour."""
@@ -93,7 +89,7 @@ class NoItem(BaseItem):
 # ---------------------------------------------------------------------------
 
 
-class Satchel(haddock.Entity):
+class Satchel(BaseItem):
     """
     An inventory container holding up to capacity items.
 
@@ -108,16 +104,14 @@ class Satchel(haddock.Entity):
 
     owner: haddock.EntityID
     items: list[BaseItem]
-    capacity: int = 10
+    capacity: int
 
     def __init__(
         self,
         items: list[BaseItem],
-        capacity: int,
         owner: haddock.EntityID,
     ) -> None:
         self.items = items
-        self.capacity = capacity
         self.owner = owner
 
     @property
@@ -127,7 +121,6 @@ class Satchel(haddock.Entity):
     def _serialize(self) -> haddock.JSONValue:
         return {
             "owner": self.owner.serialize(),
-            "capacity": self.capacity,
             "items": [haddock.serialize(item) for item in self.items],
         }
 
@@ -141,14 +134,28 @@ class Satchel(haddock.Entity):
                     f"Expected dict for Satchel, got {data!r}"
                 )
             owner = haddock.EntityID.deserialize(data["owner"])
-            capacity = data["capacity"]
             items = [haddock.deserialize(i) for i in data["items"]]  # type: ignore
-            return cls(items, capacity, owner)  # type: ignore
+            return cls(items, owner)  # type: ignore
         raise haddock.DeserializeVersionUnsupportedException()
+
+    def add_item(self, item: BaseItem):
+        if len(self.items) >= self.capacity:
+            return False
+        self.items.append(item)
+        return True
+
+
+class SmallSatchel(Satchel):
+    name: str = "Small Satchel"
+    description: str = "A small satchel. Good and reliable for hauling items"
+    capacity: int = 5
 
     @staticmethod
     def tag() -> str:
-        return "ingerman.Satchel"
+        return "ingerman.SmallSatchel"
+
+
+# class MediumSatchel(Satchel):
 
 
 # ---------------------------------------------------------------------------
@@ -303,7 +310,7 @@ class SatchelsListRider(haddock.StateRider[SatchelsList]):
 
     def render(self, state: SatchelsList) -> haddock.RenderCommand:
         return SatchelsListRenderCommand(
-            [("My satchel", haddock.EntityID("haddock", "player", "player"))]
+            [("My satchel", haddock.EntityID("jorgenson", "player", "player"))]
         )
 
 
@@ -324,9 +331,7 @@ class SatchelItemsRider(haddock.StateRider[SatchelItems]):
         padded = satchel.items + [
             NoItem() for _ in range(satchel.capacity - len(satchel.items))
         ]
-        return SatchelItemsRenderCommand(
-            f"Satchel ({satchel.capacity} items)", padded
-        )
+        return SatchelItemsRenderCommand(f"{satchel.name}", padded)
 
 
 class OpenSatchelsEventRider(haddock.EventRider[OpenSatchelsEvent]):

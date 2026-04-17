@@ -122,7 +122,7 @@ class ReturnDataEvent(haddock.Event):
         elif isinstance(self.data, haddock.Serializable):
             payload = {
                 "type": "serializable",
-                "value": haddock.serialize(self.data)
+                "value": haddock.serialize(self.data),
             }
         else:
             payload = {"type": "json", "value": self.data}
@@ -146,7 +146,7 @@ class ReturnDataEvent(haddock.Event):
                 None
             )
         elif kind == "serializable":
-            value = haddock.deserialize(raw["value"]) # type: ignore
+            value = haddock.deserialize(raw["value"])  # type: ignore
         else:
             value = raw["value"]
         return cls(value, script)  # type: ignore
@@ -237,7 +237,10 @@ class Prompt(haddock.State):
         by the quest coroutine on replay."""
         return {
             "script": self.script,
-            "options": [[action, haddock.serialize(event)] for action, event in self.options]
+            "options": [
+                [action, haddock.serialize(event)]
+                for action, event in self.options
+            ],
         }
 
     @classmethod
@@ -245,7 +248,7 @@ class Prompt(haddock.State):
         cls: type["Prompt"], data: haddock.JSONValue, version: int
     ) -> "Prompt":
         if version == 1:
-            return cls(options=[(action, haddock.deserialize(event)) for action, event in data["options"]], script=data["script"]) # type: ignore
+            return cls(options=[(action, haddock.deserialize(event)) for action, event in data["options"]], script=data["script"])  # type: ignore
         raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod

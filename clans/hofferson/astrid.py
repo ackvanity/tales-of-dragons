@@ -212,9 +212,9 @@ class Human(haddock.Entity):
             obj = cls(data["id"])  # type: ignore
             obj.health = data["health"]  # type: ignore
             obj.location = data["location"]  # type: ignore
-            obj.extra_character_actions = [ # type: ignore
+            obj.extra_character_actions = [  # type: ignore
                 haddock.deserialize(a) for a in data.get("extra_character_actions", [])  # type: ignore
-            ] 
+            ]
             return obj
         raise haddock.DeserializeVersionUnsupportedException()
 

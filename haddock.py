@@ -81,9 +81,10 @@ class Serializable(ABC):
     def tag() -> str: ...
 
     def __init_subclass__(cls, **kwargs) -> None:
+        print("Serializable: ", cls.tag())
+        serialization_table[cls.tag()] = cls
         super().__init_subclass__(**kwargs)
 
-        serialization_table[cls.tag()] = cls
 
 
 def serialize(obj: Serializable) -> JSONValue:
@@ -345,7 +346,7 @@ class EventSeries(EngineEvent):
             raise DeserializeException(
                 f"Expected list for EventSeries, got {data!r}"
             )
-        return cls([deserialize(item) for item in data]) # type: ignore
+        return cls([deserialize(item) for item in data])  # type: ignore
 
 
 # ---------------------------------------------------------------------------
@@ -712,11 +713,14 @@ class Hiccup:
 
         payload: JSONObject = {
             "states": list(map(serialize, self.states)),
-            "entities": [[serialize(entityid), serialize(value)] for entityid, value in self.entities.items()],
+            "entities": [
+                [serialize(entityid), serialize(value)]
+                for entityid, value in self.entities.items()
+            ],
         }
 
         with open(path, "w") as f:
-            json.dump(payload, f, indent=None, separators=(',', ':'))
+            json.dump(payload, f, indent=None, separators=(",", ":"))
 
     def load(self, path: str) -> None:
         """
@@ -734,7 +738,7 @@ class Hiccup:
             payload: JSONObject = json.load(f)
 
         self.states = list(map(deserialize, payload["states"]))  # type: ignore
-        self.entities = {deserialize(item[0]): deserialize(item[1]) for item in payload["entities"]} # type: ignore
+        self.entities = {deserialize(item[0]): deserialize(item[1]) for item in payload["entities"]}  # type: ignore
 
     def call_entity(
         self,

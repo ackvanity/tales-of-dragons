@@ -33,6 +33,8 @@ from components.thorston.tuffnut import (
 )
 from components.thorston import tuffnut as tuffnut_c
 from components.thorston.ruffnut import RuffnutInitiationStateRenderChief
+from clans.trader import johann
+from components.trader.johann import FishingRenderChief
 from clans.thorston import ruffnut
 import uuid
 from librarians.core import SAVE_DIRECTORY
@@ -62,6 +64,7 @@ haddock.chieftain.register_clan(fishlegs)
 haddock.chieftain.register_clan(snotlout)
 haddock.chieftain.register_clan(tuffnut)
 haddock.chieftain.register_clan(ruffnut)
+haddock.chieftain.register_clan(johann)
 
 haddock.chieftain.declare_chief(TalkingRenderChief())
 haddock.chieftain.declare_chief(WanderingRenderChief())
@@ -74,6 +77,7 @@ haddock.chieftain.declare_chief(TitleScreenRenderChief())
 haddock.chieftain.declare_chief(SaveGameListRenderChief())
 haddock.chieftain.declare_chief(CreateGameRenderChief())
 haddock.chieftain.declare_chief(RuffnutInitiationStateRenderChief())
+haddock.chieftain.declare_chief(FishingRenderChief())
 
 # ---------------------------------------------------------------------------
 # Seed initial game state
@@ -112,8 +116,8 @@ def _init_game(player_name):
 
     # Player inventory
     haddock.chieftain.entities[haddock.EntityID("ingerman", "satchel", "1")] = (
-        fishlegs.Satchel(
-            [], 10, haddock.EntityID("haddock", "player", "player")
+        fishlegs.SmallSatchel(
+            [], haddock.EntityID("jorgenson", "player", "player")
         )
     )
 
@@ -154,7 +158,7 @@ if init_player_name or init_save_name:
 
     if init_player_name:
         _init_game(init_player_name)
-        init_save_name = str(uuid.uuid4())
+        init_save_name = str(uuid.uuid4()) + ".json"
         save_path = SAVE_DIRECTORY + "/" + init_save_name  # type: ignore
     else:
         save_path = SAVE_DIRECTORY + "/" + init_save_name  # type: ignore

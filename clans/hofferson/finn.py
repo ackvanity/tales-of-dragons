@@ -131,7 +131,7 @@ class Location(haddock.Entity):
                     f"Expected dict for Location, got {data!r}"
                 )
             obj = cls(data["id"])  # type: ignore
-            obj.extra_location_actions = [ # type: ignore
+            obj.extra_location_actions = [  # type: ignore
                 haddock.deserialize(a) for a in data.get("extra_location_actions", [])  # type: ignore
             ]
             return obj

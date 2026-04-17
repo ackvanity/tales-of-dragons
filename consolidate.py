@@ -45,6 +45,8 @@ for filename in os.listdir(STORY_DIR):
 
     # Write back the updated JSON
     with open(filepath, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=None, separators=(',', ':'))
+        json.dump(
+            data, f, ensure_ascii=False, indent=None, separators=(",", ":")
+        )
 
 print("Locations updated with adjacency actions!")

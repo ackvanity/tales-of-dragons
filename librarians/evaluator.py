@@ -17,8 +17,15 @@ are available, limiting what event strings can reference.
 import haddock
 from clans.hofferson import astrid, finn
 from clans.ingerman import fishlegs
+from clans.trader import johann
 
-_eval_scope = {"astrid": astrid, "finn": finn, "fishlegs": fishlegs}
+_eval_scope = {
+    "astrid": astrid,
+    "finn": finn,
+    "fishlegs": fishlegs,
+    "haddock": haddock,
+    "johann": johann,
+}
 """Controlled scope used by eval() to prevent arbitrary code execution."""
 
 

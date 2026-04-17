@@ -9,6 +9,10 @@
         {
             "line": "There's a forest path climbing upward. I can follow it through the branches.",
             "event": "finn.LocationTeleportEngineEvent('berk_arena')"
+        },
+        {
+            "line": "Hmm... perhaps the lake has some delicious fish to eat.",
+            "event": "haddock.AppendStateEvent(johann.Fishing('freshwater', 'At the big lake where Toothless once dwelled, as Hiccup told me.'))"
         }
     ]
 }

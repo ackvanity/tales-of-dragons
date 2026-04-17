@@ -8,16 +8,16 @@ Label.title {
 
 SatchelItem {
   text-style: italic;
+  layout: grid;
+  grid-columns: 15 1fr;
+  grid-size: 2 1;
+  width: 100%;
 
   & Label.name {
-    width: 15;
     text-style: italic bold;
   }
-  
-  & Label.description {
-    width: 100%;
-  }
 }
+
 
 Button.back {
   background: transparent !important;
