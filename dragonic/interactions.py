@@ -110,7 +110,7 @@ async def send_dialogue(speaker: str, line: str) -> None:
     mounting the dialogue widget (auto-advance — no player action needed).
     """
     syscall = SendDialogueSyscall()
-    syscall.speaker = speaker
+    syscall.speaker = speaker.title()
     syscall.line = line
     return await syscall
 

@@ -81,10 +81,8 @@ class Serializable(ABC):
     def tag() -> str: ...
 
     def __init_subclass__(cls, **kwargs) -> None:
-        print("Serializable: ", cls.tag())
         serialization_table[cls.tag()] = cls
         super().__init_subclass__(**kwargs)
-
 
 
 def serialize(obj: Serializable) -> JSONValue:
