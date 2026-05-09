@@ -45,15 +45,12 @@ def package():
     os.makedirs("data", exist_ok=True)
 
     # Character and locations can directly be copied
-    shutil.rmtree("data/character")
-    shutil.rmtree("data/location")
     shutil.copytree("content/character", "data/character")
     shutil.copytree("content/location", "data/location")
 
     # Migrate quests
 
     for quest in os.listdir("content/quest"):
-        print(quest)
         if os.path.isfile("content/quest/" + quest) and quest.endswith(".py"):
             id = quest[:-3]
             
@@ -63,3 +60,6 @@ def package():
                 exec(code, namespace)
                 version: tuple[int, int, int] = namespace["VERSION"] # type: ignore
                 migrate_quest(id, code, version, f"data/quest/{id}/")
+
+if __name__ == "__main__":
+    package()

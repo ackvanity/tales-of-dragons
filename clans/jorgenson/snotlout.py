@@ -20,6 +20,7 @@ import haddock
 import dragonic.base
 import dragonic.core
 import dragonic.interactions
+import librarians.jorgenson.snotlout
 import uuid
 from clans.hofferson import astrid
 import librarians.core
@@ -538,16 +539,20 @@ class DragonicQuest(haddock.Entity):
     data_stream: List[dragonic.base.ValueLike]
     id: str
     completed: bool
+    code_version: tuple[int, int, int]
 
     def __init__(
         self,
         id: str,
         data_stream: List[dragonic.base.ValueLike] | None = None,
+        code_version: tuple[int, int, int] | None = None
     ) -> None:
-        source = librarians.core.get_data(["quest", id], "py", False)  # type: ignore
+        file = librarians.jorgenson.snotlout.get_quest(id, code_version)
+        source = librarians.core.get_data(file[0], "py", False)  # type: ignore
         self.id = id
         self.data_stream = data_stream if data_stream is not None else []
         self.completed = False
+        self.code_version = file[1]
 
         namespace: dict = {}
         exec(source, namespace)  # type: ignore
@@ -558,7 +563,7 @@ class DragonicQuest(haddock.Entity):
 
     @property
     def version(self) -> int:
-        return 1
+        return 2
 
     def _serialize(self) -> haddock.JSONValue:
         """Serialize the quest id and the full data_stream for replay.
@@ -582,13 +587,13 @@ class DragonicQuest(haddock.Entity):
                 raise NotImplementedError(
                     f"Snotlout got object {entry} but nobody told him how to handle it. Now only Hookfang's on site!"
                 )
-        return {"id": self.id, "data_stream": stream}
+        return {"id": self.id, "code_version": list(self.code_version), "data_stream": stream}
 
     @classmethod
     def _deserialize(
         cls: type["DragonicQuest"], data: haddock.JSONValue, version: int
     ) -> "DragonicQuest":
-        if version == 1:
+        if version == 1 or version == 2:
             if not isinstance(data, dict):
                 raise haddock.DeserializeException(
                     f"Expected dict for DragonicQuest, got {data!r}"
@@ -616,7 +621,11 @@ class DragonicQuest(haddock.Entity):
                     )
                 else:
                     stream.append(entry["value"])  # type: ignore
-            return cls(quest_id, stream)  # type: ignore
+            
+            if version == 1:
+                return cls(quest_id, stream)  # type: ignore
+            else:
+                return cls(quest_id, stream, tuple(data["code_version"]))  # type: ignore
         raise haddock.DeserializeVersionUnsupportedException()
 
     @staticmethod
