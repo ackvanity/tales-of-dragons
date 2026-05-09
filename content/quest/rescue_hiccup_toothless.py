@@ -6,6 +6,7 @@ from dragonic.interactions import (
 )
 from dragonic.core import world
 
+VERSION = (1,0,0)
 
 async def main():
     await add_character_hook(

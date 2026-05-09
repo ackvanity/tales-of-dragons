@@ -12,7 +12,7 @@ import haddock
 import os
 
 SAVE_DIRECTORY = "saves"
-"""Directory where save files will be written (not yet implemented)."""
+"""Directory where save files will be written."""
 
 DATA_DIRECTORY = "data"
 """Root directory for all game content files."""

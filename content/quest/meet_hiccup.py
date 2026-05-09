@@ -7,6 +7,7 @@ from dragonic.interactions import (
 from dragonic.core import world
 from dragonic.base import NoOpSyscall
 
+VERSION = (1,0,0)
 
 async def main():
     await NoOpSyscall()

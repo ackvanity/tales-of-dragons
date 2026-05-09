@@ -12,49 +12,6 @@ Quest scripts import from this module:
 
 from typing import List, Type
 import haddock
-from dragonic.base import Syscall
-
-# ---------------------------------------------------------------------------
-# Syscall types (yielded by helper functions below)
-# ---------------------------------------------------------------------------
-
-
-class StorySyscall(Syscall):
-    """Base class for syscalls that produce visible output to the player."""
-
-
-class SendDialogueSyscall(StorySyscall):
-    """Syscall to display a character dialogue line. Auto-advances."""
-
-    speaker: str
-    line: str
-
-
-class SendStorySyscall(StorySyscall):
-    """Syscall to display a narration paragraph. Auto-advances."""
-
-    text: str
-
-
-class SendPromptSyscall(StorySyscall):
-    """Syscall to present a player choice menu. Suspends until selection."""
-
-    options: List[str]
-
-
-class AddLocationHookSyscall(StorySyscall):
-    """Syscall to inject a navigation option into a location (not yet wired)."""
-
-    location: str
-    line: str
-
-
-class AddCharacterHookSyscall(StorySyscall):
-    """Syscall to inject a dialogue option into an NPC. Suspends until clicked."""
-
-    character: str
-    line: str
-
 
 # ---------------------------------------------------------------------------
 # Result types
@@ -95,6 +52,48 @@ class DialogueResult(haddock.Serializable):
                 f"Expected dict for DialogueResult, got {data!r}"
             )
         return cls(index=data["index"], text=data["text"])  # type: ignore
+    
+# ---------------------------------------------------------------------------
+# Syscall types (yielded by helper functions below)
+# ---------------------------------------------------------------------------
+
+from dragonic.base import Syscall # Import here to avoid circular import!
+
+class StorySyscall(Syscall):
+    """Base class for syscalls that produce visible output to the player."""
+
+
+class SendDialogueSyscall(StorySyscall):
+    """Syscall to display a character dialogue line. Auto-advances."""
+
+    speaker: str
+    line: str
+
+
+class SendStorySyscall(StorySyscall):
+    """Syscall to display a narration paragraph. Auto-advances."""
+
+    text: str
+
+
+class SendPromptSyscall(StorySyscall):
+    """Syscall to present a player choice menu. Suspends until selection."""
+
+    options: List[str]
+
+
+class AddLocationHookSyscall(StorySyscall):
+    """Syscall to inject a navigation option into a location (not yet wired)."""
+
+    location: str
+    line: str
+
+
+class AddCharacterHookSyscall(StorySyscall):
+    """Syscall to inject a dialogue option into an NPC. Suspends until clicked."""
+
+    character: str
+    line: str
 
 
 # ---------------------------------------------------------------------------
