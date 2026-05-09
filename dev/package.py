@@ -41,7 +41,8 @@ def migrate_quest(id: str, code: str, version: tuple[int, int, int], target_dir:
             f.write(code)
 
 def package():
-    shutil.rmtree("data/")
+    shutil.rmtree("data/character")
+    shutil.rmtree("data/location")
     os.makedirs("data", exist_ok=True)
 
     # Character and locations can directly be copied
