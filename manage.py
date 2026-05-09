@@ -35,6 +35,7 @@ import librarians.hofferson.finn
 import librarians.hofferson.astrid
 import librarians.ingerman
 import librarians.core
+import watchfiles
 from dev.package import package as _package
 
 err_console = Console(stderr=True)
@@ -127,6 +128,20 @@ def package(
     _package()
     std_console.print(f"[green bold]All files migrated![/green bold]")
 
+@app.command()
+def debug():
+    """
+    Runs the debugging process. Thispackages all files on any write.
+    """
+    std_console.print("Debugging process started. Game data will be repackaged on writes")
+    for changes in watchfiles.watch("./content"):
+        std_console.print(f"[bold]Changes detected. Repackaging files...[/bold]")
+        try:
+            _package(debug=True)
+            std_console.print(f"[green]Files packaged successfully![/green]")
+        except Exception as e:
+            std_console.print(f"[red bold]Error packaging: {e}[/red bold]")
+            
 @app.command()
 def hello():
     """
