@@ -40,7 +40,12 @@ def migrate_quest(id: str, code: str, version: tuple[int, int, int], target_dir:
         with open(file_name, "w") as f:
             f.write(code)
 
-def package():
+def package(debug=False):
+    """
+    Packages all files. If debug is True, disable some safety checks, such as 
+    ensuring quests are versioned correctly, to allow fast prototyping.
+    """
+
     shutil.rmtree("data/character")
     shutil.rmtree("data/location")
     os.makedirs("data", exist_ok=True)
@@ -60,7 +65,13 @@ def package():
                 namespace: dict = {}
                 exec(code, namespace)
                 version: tuple[int, int, int] = namespace["VERSION"] # type: ignore
-                migrate_quest(id, code, version, f"data/quest/{id}/")
+                try:
+                    migrate_quest(id, code, version, f"data/quest/{id}/")
+                except QuestVersionExistsException:
+                    if debug:
+                        print(f"Note: overwriting quest {id}, version {'.'.join(list(map(str,version)))}:")
+                    else:
+                        raise
 
 if __name__ == "__main__":
     package()
