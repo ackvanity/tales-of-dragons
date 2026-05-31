@@ -25,10 +25,10 @@ class Fishing(CenterMiddle, TCSS):
 
     def on_button_pressed(self, event: Button.Pressed):
         if event.button.id == "fish":
-            fish = select_fish(
-                [fish for fish in fishes if fish.biome_freshwater]
-            )
-            satchel: fishlegs.Satchel = haddock.chieftain.call_entity(fishlegs.get_satchel(haddock.EntityID("jorgenson", "player", "player")))  # type: ignore
+            fish = select_fish([fish for fish in fishes if fish.biome_freshwater])
+            satchel: fishlegs.Satchel = haddock.chieftain.call_entity(
+                fishlegs.get_satchel(haddock.EntityID("jorgenson", "player", "player"))
+            )  # type: ignore
             added = satchel.add_item(fish)
 
             if not added:

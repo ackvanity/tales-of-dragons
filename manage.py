@@ -26,15 +26,8 @@ BONUS: Diegetic mode!
 """
 
 import typer
-import os
-from pathlib import Path
 from typing import Annotated
 from rich.console import Console
-import librarians
-import librarians.hofferson.finn
-import librarians.hofferson.astrid
-import librarians.ingerman
-import librarians.core
 import watchfiles
 from dev.package import package as _package
 
@@ -68,8 +61,8 @@ app = typer.Typer()
 #                 success += 1
 #             else:
 #                 failure += 1
-#         else: 
-#             skipped += 1 
+#         else:
+#             skipped += 1
 
 #     std_console.print(f"[b]Parse completed. [green]{success}[/green] parsed successfully, [red]{failure}[/red] failed to parse, [blue]{skipped}[/blue] skipped.[/b]")
 
@@ -83,7 +76,7 @@ app = typer.Typer()
 #     std_console.print("[i]Let's get started on writing your quest. This setup will help you get started[/i]")
 #     std_console.print("[i]We will need the following details to create your quest.[/i]")
 #     id = typer.prompt("Quest ID")
-    
+
 #     quest_file = """
 # from dragonic.interactions import *
 # from dragonic.core import *
@@ -106,6 +99,7 @@ app = typer.Typer()
 # app.add_typer(validate, name="validate")
 # app.add_typer(scaffold, name="scaffold")
 
+
 @app.command()
 def package(
     headless: Annotated[
@@ -121,33 +115,38 @@ def package(
     THIS WILL DELETE EVERYTHING IN THE DATA/ DIRECTORY AND CANNOT BE UNDONE!
     """
     if not headless:
-        std_console.print(f"[yellow bold]Operation cancelled by user.[/yellow bold]")
+        std_console.print("[yellow bold]Operation cancelled by user.[/yellow bold]")
         return
 
-    std_console.print(f"[red bold]WARN: Deleting all files in data/[/red bold]")
+    std_console.print("[red bold]WARN: Deleting all files in data/[/red bold]")
     _package()
-    std_console.print(f"[green bold]All files migrated![/green bold]")
+    std_console.print("[green bold]All files migrated![/green bold]")
+
 
 @app.command()
 def debug():
     """
     Runs the debugging process. Thispackages all files on any write.
     """
-    std_console.print("Debugging process started. Game data will be repackaged on writes")
-    for changes in watchfiles.watch("./content"):
-        std_console.print(f"[bold]Changes detected. Repackaging files...[/bold]")
+    std_console.print(
+        "Debugging process started. Game data will be repackaged on writes"
+    )
+    for _ in watchfiles.watch("./content"):
+        std_console.print("[bold]Changes detected. Repackaging files...[/bold]")
         try:
             _package(debug=True)
-            std_console.print(f"[green]Files packaged successfully![/green]")
+            std_console.print("[green]Files packaged successfully![/green]")
         except Exception as e:
             std_console.print(f"[red bold]Error packaging: {e}[/red bold]")
-            
+
+
 @app.command()
 def hello():
     """
     Greet your fellow villages at Berk!
     """
-    std_console.print(f"[bold]HICCUP:[/bold] Hey! How are you doing at Berk?")
+    std_console.print("[bold]HICCUP:[/bold] Hey! How are you doing at Berk?")
+
 
 if __name__ == "__main__":
     app()

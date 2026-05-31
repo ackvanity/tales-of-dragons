@@ -1,5 +1,4 @@
 import haddock
-from clans.jorgenson import snotlout
 
 
 class RuffnutInitiationState(haddock.State):
@@ -33,9 +32,7 @@ class RuffnutInitiationStateRider(haddock.StateRider[RuffnutInitiationState]):
     def render(self, state: RuffnutInitiationState) -> haddock.RenderCommand:
         return RuffnutInitiationRenderCommand()
 
-    def roll_call(
-        self, state: RuffnutInitiationState, event: haddock.Event
-    ) -> None:
+    def roll_call(self, state: RuffnutInitiationState, event: haddock.Event) -> None:
         # if isinstance(event, haddock.TeamAssembled):
         #     haddock.chieftain.mail_event(snotlout.ReturnDataEvent(None, "meet_hiccup"))
         pass

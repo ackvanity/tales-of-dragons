@@ -59,7 +59,9 @@ def parse_save_file(file: str) -> tuple[str, str] | None:
     try:
         hiccup = haddock.Hiccup()
         hiccup.load(f"{SAVE_DIRECTORY}/{file}")
-        name = hiccup.call_entity(haddock.EntityID("jorgenson", "player", "player")).name  # type: ignore
+        name = hiccup.call_entity(
+            haddock.EntityID("jorgenson", "player", "player")
+        ).name  # type: ignore
         return (file, name)
     except Exception as e:
         print(f"Cannot parse file f{file}. Exception: {e}")

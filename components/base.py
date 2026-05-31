@@ -33,12 +33,12 @@ class EventEmitButton(Button, TCSS):
         event: The haddock Event to fire when this button is pressed.
     """
 
-    event: reactive[haddock.Event] = reactive(haddock.Event())
+    event: reactive[haddock.Event] = reactive(haddock.NoEvent())
 
     def __init__(
         self,
         line: str = "",
-        haddock_event: haddock.Event = haddock.Event(),
+        haddock_event: haddock.Event = haddock.NoEvent(),
         *args,
         **kwargs,
     ) -> None:

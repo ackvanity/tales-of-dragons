@@ -45,9 +45,7 @@ class LocationTeleportEventBase:
         self.to = to
 
 
-class LocationTeleportEngineEvent(
-    LocationTeleportEventBase, haddock.EngineEvent
-):
+class LocationTeleportEngineEvent(LocationTeleportEventBase, haddock.EngineEvent):
     """
     Engine event that pushes a Wandering state for the target location.
 
@@ -59,16 +57,20 @@ class LocationTeleportEngineEvent(
     def tag() -> str:
         return "hofferson.LocationTeleportEngineEvent"
 
-    def _serialize_payload(self) -> haddock.JSONValue:
+    def _serialize(self) -> haddock.JSONValue:
         return self.to
 
     @classmethod
-    def deserialize(cls, data: haddock.JSONValue) -> "LocationTeleportEngineEvent":  # type: ignore
+    def _deserialize(cls, data: haddock.JSONValue) -> "LocationTeleportEngineEvent":  # type: ignore
         if not isinstance(data, str):
             raise haddock.DeserializeException(
                 f"Expected str for LocationTeleportEngineEvent, got {data!r}"
             )
         return cls(data)
+
+    @property
+    def version(self) -> int:
+        return 1
 
 
 class LocationTeleportEvent(LocationTeleportEventBase, haddock.Event):
@@ -132,7 +134,8 @@ class Location(haddock.Entity):
                 )
             obj = cls(data["id"])  # type: ignore
             obj.extra_location_actions = [  # type: ignore
-                haddock.deserialize(a) for a in data.get("extra_location_actions", [])  # type: ignore
+                haddock.deserialize(a)
+                for a in data.get("extra_location_actions", [])  # type: ignore
             ]
             return obj
         raise haddock.DeserializeVersionUnsupportedException()
@@ -177,9 +180,7 @@ class Location(haddock.Entity):
     def ambient(self) -> str:
         """Return a random ambient description line for this location."""
         return random.choice(
-            librarian.parse_location_data(
-                core.get_data(f"location/{self.id}")
-            ).ambient
+            librarian.parse_location_data(core.get_data(f"location/{self.id}")).ambient
         )
 
 
@@ -268,9 +269,7 @@ class LocationTeleportRider(haddock.EventRider[LocationTeleportEngineEvent]):
     event_type = LocationTeleportEngineEvent
 
     def roll_call(self, event: LocationTeleportEngineEvent) -> None:
-        haddock.chieftain.mail_event(
-            haddock.AppendStateEvent(Wandering(event.to))
-        )
+        haddock.chieftain.mail_event(haddock.AppendStateEvent(Wandering(event.to)))
 
 
 class WanderingRider(haddock.StateRider[Wandering]):

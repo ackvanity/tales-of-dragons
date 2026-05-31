@@ -1,14 +1,13 @@
 from dragonic.interactions import (
     send_dialogue,
     send_prompt,
-    add_character_hook,
     send_story,
     send_debug,
 )
-from dragonic.core import world
 from dragonic.base import NoOpSyscall
 
-VERSION = (2,0,0)
+VERSION = (2, 0, 0)
+
 
 async def surviving():
     await send_debug("Surviving Scene")
@@ -40,18 +39,38 @@ async def stay_alive():
     await send_dialogue("YOU", result.text)
 
     if result.index == 0:
-        await send_dialogue("HICCUP", "Oh gods, hang on. Hang on, d-don't close your eyes! Hey, hey- look at me! I'm here, stay with me now, just stay with me for a while. Please... don't go. just remember, deep breaths. O-okay, now you're getting it!")
-        await send_story("You try pulling your lead-heavy eyelids up, following what Hiccup told you to do. Your lungs barely fill up with air, every breath pushing your chest to its limits.")
+        await send_dialogue(
+            "HICCUP",
+            "Oh gods, hang on. Hang on, d-don't close your eyes! Hey, hey- look at me! I'm here, stay with me now, just stay with me for a while. Please... don't go. just remember, deep breaths. O-okay, now you're getting it!",
+        )
+        await send_story(
+            "You try pulling your lead-heavy eyelids up, following what Hiccup told you to do. Your lungs barely fill up with air, every breath pushing your chest to its limits."
+        )
 
     elif result.index == 1:
-        await send_story("Okay... now just stay calm and stay with me, alright? Re-Remember, deep breaths... deep breaths...")
-    
-    await send_story("Toothless begins plowing the thick undergrowth. Your head lolls with every step, as the world shakes around you. The only things that stay are the hard saddle pressing on your back and Hiccup's hands tensely clenching your hands.")
-    await send_dialogue("HICCUP", "Hold on now... hold on! You're doing good- just hang on now, j-just a littleee more...")
-    await send_story("The blue skies swim past you as you try to find which way is up. A wooden roof cuts into the vivid sky hue. Rustic and aged, as if it will fall by dusk. Toothless settles down immediately, sending the world on a major earthquake. You barely hold balance. Your head tips to the left. Your body follows. Hiccup shifts forward. His two hands catch your body. Barely")
-    await send_dialogue("HICCUP", "Oh, woaah! It's okay... it's okay... we're at Gothi's now. She will treat you")
+        await send_story(
+            "Okay... now just stay calm and stay with me, alright? Re-Remember, deep breaths... deep breaths..."
+        )
+
+    await send_story(
+        "Toothless begins plowing the thick undergrowth. Your head lolls with every step, as the world shakes around you. The only things that stay are the hard saddle pressing on your back and Hiccup's hands tensely clenching your hands."
+    )
+    await send_dialogue(
+        "HICCUP",
+        "Hold on now... hold on! You're doing good- just hang on now, j-just a littleee more...",
+    )
+    await send_story(
+        "The blue skies swim past you as you try to find which way is up. A wooden roof cuts into the vivid sky hue. Rustic and aged, as if it will fall by dusk. Toothless settles down immediately, sending the world on a major earthquake. You barely hold balance. Your head tips to the left. Your body follows. Hiccup shifts forward. His two hands catch your body. Barely"
+    )
+    await send_dialogue(
+        "HICCUP",
+        "Oh, woaah! It's okay... it's okay... we're at Gothi's now. She will treat you",
+    )
     await send_dialogue("YOU", "Ah... need... sleep...")
-    await send_story("Succumbing to your tiredness, you let your eyelids close. The world turns pitch black and silence appears, but a pair of hands still grip yours, worried to let go. Nobody tells you to stay awake, so you just... continue... because... what else can.... you... do...")
+    await send_story(
+        "Succumbing to your tiredness, you let your eyelids close. The world turns pitch black and silence appears, but a pair of hands still grip yours, worried to let go. Nobody tells you to stay awake, so you just... continue... because... what else can.... you... do..."
+    )
+
 
 async def crash_land():
     await send_story(
@@ -60,9 +79,7 @@ async def crash_land():
     await send_story(
         "A Night Fury walks past you. Its black scales hide the sun from you. Its growl vibrates your lungs. Your head shakes. You want to move. But you can't even stay awake."
     )
-    await send_dialogue(
-        "???", "Hey! Toothless, what did you find this time bud...?"
-    )
+    await send_dialogue("???", "Hey! Toothless, what did you find this time bud...?")
     await send_story(
         "The fish-thin kid rubs his fingers around your left hand, looking for a pulse. The Night Fury stares into your heavy eyelids, mildly touching your bruised face. You want to drift away, but the confusion, steady growl, and the talk of a small-ish Viking teen stops you from doing so."
     )
@@ -104,9 +121,7 @@ async def crash_land():
                 "Oh, my bad. My name's Hiccup, and that Night Fury's Toothless - don't get scared by him!",
             )
             await send_dialogue("HICCUP", "So, who are you?")
-            await send_dialogue(
-                "YOU", (await send_prompt(["I... don't know..."])).text
-            )
+            await send_dialogue("YOU", (await send_prompt(["I... don't know..."])).text)
 
             await who_am_i()
 
@@ -134,9 +149,7 @@ async def crash_land():
             )
             await send_dialogue(
                 "YOU",
-                (
-                    await send_prompt(["I'm... I'm... uh, what's my name...?"])
-                ).text,
+                (await send_prompt(["I'm... I'm... uh, what's my name...?"])).text,
             )
 
             await who_am_i()
@@ -169,9 +182,7 @@ async def crash_land():
             )
             await send_dialogue(
                 "YOU",
-                (
-                    await send_prompt(["I'm... I'm... uh, what's my name...?"])
-                ).text,
+                (await send_prompt(["I'm... I'm... uh, what's my name...?"])).text,
             )
 
             await who_am_i()

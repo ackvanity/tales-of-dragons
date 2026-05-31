@@ -13,7 +13,7 @@ import haddock
 from components.hofferson import Story
 
 
-class TextualApplication(App):
+class TextualApplication(App):  # type: ignore
     """
     The main Textual application.
 
@@ -62,7 +62,7 @@ class TextualApplication(App):
         """
         mount_point = self.get_mount_point()
         children = list(mount_point.children)
-        if len(children) != 1 or type(children[0]) != klass:
+        if len(children) != 1 or isinstance(children[0], klass):
             await self.clear_history()
             await mount_point.mount(klass())
 

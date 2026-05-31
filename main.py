@@ -13,7 +13,7 @@ import stoick
 from clans.hofferson import astrid, finn
 from clans.ingerman import fishlegs
 from clans.jorgenson import snotlout
-from clans.thorston.tuffnut import TitleScreen, SaveGameList, CreateGame
+from clans.thorston.tuffnut import TitleScreen
 from clans.thorston import tuffnut
 from components.hofferson.astrid import TalkingRenderChief
 from components.hofferson.finn import WanderingRenderChief
@@ -116,15 +116,13 @@ def _init_game(player_name):
 
     # Player inventory
     haddock.chieftain.entities[haddock.EntityID("ingerman", "satchel", "1")] = (
-        fishlegs.SmallSatchel(
-            [], haddock.EntityID("jorgenson", "player", "player")
-        )
+        fishlegs.SmallSatchel([], haddock.EntityID("jorgenson", "player", "player"))
     )
 
     # Player entity
-    haddock.chieftain.entities[
-        haddock.EntityID("jorgenson", "player", "player")
-    ] = snotlout.Player(player_name)
+    haddock.chieftain.entities[haddock.EntityID("jorgenson", "player", "player")] = (
+        snotlout.Player(player_name)
+    )
 
     # Active quests
     haddock.chieftain.entities[

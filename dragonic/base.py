@@ -62,7 +62,7 @@ KeyLike = int | bool | str | haddock.EntityID
 
 # Import here to avoid circular imports — dragonic.interactions imports haddock,
 # haddock does not import dragonic, so this direction is safe.
-from dragonic.interactions import DialogueResult as _DialogueResult
+from dragonic.interactions import DialogueResult as _DialogueResult  # noqa: E402
 
 ValueLike = (
     haddock.EntityID

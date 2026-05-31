@@ -8,6 +8,8 @@ Also injects a "Check satchel" action into all NPC dialogue menus via the
 module-level extra_character_actions list.
 """
 
+from typing_extensions import Self
+
 import haddock
 from clans.hofferson import Action
 
@@ -269,7 +271,7 @@ class SatchelItemsRenderCommand(haddock.RenderCommand):
 # ---------------------------------------------------------------------------
 
 
-class OpenSatchelsEvent(haddock.EngineEvent):
+class OpenSatchelsEvent(haddock.StatelessSerializable, haddock.EngineEvent):
     """Open the satchel list screen. Fired by the "Check satchel" action."""
 
     @staticmethod
@@ -285,13 +287,39 @@ class OpenSatchelItemsEvent(haddock.EngineEvent):
     def __init__(self, satchel: haddock.EntityID) -> None:
         self.satchel = satchel
 
+    def _serialize(self) -> haddock.JSONValue:
+        return haddock.serialize(self.satchel)
 
-class CloseSatchelsListEvent(haddock.Event):
+    @classmethod
+    def _deserialize(cls, data: haddock.JSONValue, version: int) -> Self:
+        if version == 1:
+            return cls(haddock.deserialize(data))  # type: ignore
+        else:
+            raise haddock.DeserializeVersionUnsupportedException()
+
+    @staticmethod
+    def tag() -> str:
+        return "jorgenson.OpenSatchelItemsEvent"
+
+    @property
+    def version(self) -> int:
+        return 1
+
+
+class CloseSatchelsListEvent(haddock.StatelessSerializable, haddock.Event):
     """Dismiss the satchel list screen (pop SatchelsList state)."""
 
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.CloseSatchelsListEvent"
 
-class CloseSatchelItemsEvent(haddock.Event):
+
+class CloseSatchelItemsEvent(haddock.StatelessSerializable, haddock.Event):
     """Dismiss the satchel items screen (pop SatchelItems state)."""
+
+    @staticmethod
+    def tag() -> str:
+        return "ingerman.CloseSatchelItemsEvent"
 
 
 # ---------------------------------------------------------------------------
