@@ -2,22 +2,28 @@ repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
   rev: v0.15.15
   hooks:
-    - id: ruff-check
-      args: [ --fix ]
-    - id: ruff-format
+  - id: ruff-check
+    args: [ --fix ]
+  - id: ruff-format
+
+# - repo: https://github.com/DetachHead/basedpyright-pre-commit-mirror
+#   rev: v1.13.0 # or whatever the latest version is at the time
+#   hooks:
+#     - id: basedpyright
+
 - repo: local
   hooks:
-    - id: pip-require
-      name: pip require.txt
-      exclude: ^.*
-      entry: pip freeze > requirements.txt
-      language: system
-      always_run: true
+  - id: pip-require
+    name: pip require.txt
+    exclude: ^.*
+    entry: pip freeze > requirements.txt
+    language: system
+    always_run: true
 
-    - id: berk-clatter
-      name: Berkian clatters...
-      exclude: ^.*
-      entry: python clatter.py
-      language: system
-      always_run: true
-      verbose: true
+  - id: berk-clatter
+    name: Berkian clatters...
+    exclude: ^.*
+    entry: python clatter.py
+    language: system
+    always_run: true
+    verbose: true
