@@ -177,3 +177,13 @@ async def add_character_hook(character: str, line: str) -> None:
     syscall.character = character
     syscall.line = line
     return await syscall
+
+async def send_debug(line: str) -> None:
+    """
+    Sends a debug line. Similar to send_story but attributes dialogue to the debug
+    mode
+    """
+    syscall = SendDialogueSyscall()
+    syscall.speaker = "DEBUG"
+    syscall.line = line
+    return await syscall
