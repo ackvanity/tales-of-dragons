@@ -46,9 +46,7 @@ class SatchelList(VerticalScroll, TCSS):
         yield Label("Satchels", classes="title")
         for name, event in self.satchels:
             yield EventEmitButton(name, event, classes="satchel")
-        yield EventEmitButton(
-            "Go Back.", CloseSatchelsListEvent(), classes="back"
-        )
+        yield EventEmitButton("Go Back.", CloseSatchelsListEvent(), classes="back")
 
 
 class SatchelItem(HorizontalGroup):
@@ -60,9 +58,7 @@ class SatchelItem(HorizontalGroup):
         label = Label(self.item.name, classes="name", disabled=True)
         label.can_focus = False
         yield label
-        label = Label(
-            self.item.description, classes="description", disabled=True
-        )
+        label = Label(self.item.description, classes="description", disabled=True)
         label.can_focus = False
         yield label
 
@@ -91,9 +87,7 @@ class SatchelItems(VerticalScroll, TCSS):
         yield Label(self.title, classes="title")
         for item in self.items:
             yield SatchelItem(item)
-        yield EventEmitButton(
-            "Go Back.", CloseSatchelItemsEvent(), classes="back"
-        )
+        yield EventEmitButton("Go Back.", CloseSatchelItemsEvent(), classes="back")
 
 
 class SatchelsListRenderChief(haddock.RenderChief[SatchelsListRenderCommand]):
@@ -113,9 +107,7 @@ class SatchelsListRenderChief(haddock.RenderChief[SatchelsListRenderCommand]):
     ) -> None:
         async def _render() -> None:
             await application.clear_history()
-            await application.get_mount_point().mount(
-                SatchelList(command.satchels)
-            )
+            await application.get_mount_point().mount(SatchelList(command.satchels))
 
         asyncio.create_task(_render())
 

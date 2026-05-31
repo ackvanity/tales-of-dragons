@@ -1,0 +1,6 @@
+{
+  "include": ["**/*.py"],
+  "exclude": ["**/__pycache__", "bin", "include", "lib", "lib64", "**/node_modules", "**/.*"],
+  "typeCheckingMode": "standard",
+  "pythonVersion": "3.10"
+}

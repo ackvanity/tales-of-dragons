@@ -16,6 +16,7 @@ from typing import Callable, TypeAlias, TypeVar, Generic, Type, Union
 from abc import ABC, abstractmethod
 from collections import deque
 from dataclasses import dataclass
+from typing_extensions import Self
 import json
 
 # ---------------------------------------------------------------------------
@@ -25,6 +26,7 @@ import json
 S = TypeVar("S", bound="State")
 E = TypeVar("E", bound="Entity")
 V = TypeVar("V", bound="EngineEvent")
+T = TypeVar("T", bound="Event")
 C = TypeVar("C", bound="RenderCommand")
 R = TypeVar("R", bound="Serializable")
 
@@ -74,7 +76,7 @@ class Serializable(ABC):
 
     @classmethod
     @abstractmethod
-    def deserialize(cls: Type[R], data: JSONValue) -> R: ...
+    def deserialize(cls, data: JSONValue) -> Self: ...
 
     @staticmethod
     @abstractmethod
@@ -83,6 +85,21 @@ class Serializable(ABC):
     def __init_subclass__(cls, **kwargs) -> None:
         serialization_table[cls.tag()] = cls
         super().__init_subclass__(**kwargs)
+
+
+class StatelessSerializable:
+    def _serialize(self) -> JSONValue:
+        return ""
+
+    @classmethod
+    def _deserialize(cls, data: JSONValue, version: int) -> Self:
+        return cls()
+
+    version = 1
+
+    @classmethod
+    def deserialize(cls, data: JSONValue) -> Self:
+        return cls()
 
 
 def serialize(obj: Serializable) -> JSONValue:
@@ -134,9 +151,7 @@ class State(Serializable):
     def deserialize(cls: Type[S], data: JSONValue) -> S:
         """Reconstruct a State from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(
-                f"Expected [version, payload], got {data!r}"
-            )
+            raise DeserializeException(f"Expected [version, payload], got {data!r}")
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -179,9 +194,7 @@ class Entity(Serializable):
     def deserialize(cls: Type[E], data: JSONValue) -> E:
         """Reconstruct an Entity from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(
-                f"Expected [version, payload], got {data!r}"
-            )
+            raise DeserializeException(f"Expected [version, payload], got {data!r}")
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -220,9 +233,7 @@ class EntityID(Serializable):
     def deserialize(cls, data: JSONValue) -> "EntityID":
         """Reconstruct an EntityID from [clan, species, name]."""
         if not isinstance(data, list) or len(data) < 3:
-            raise DeserializeException(
-                f"Expected [clan, species, name], got {data!r}"
-            )
+            raise DeserializeException(f"Expected [clan, species, name], got {data!r}")
         return cls(data[0], data[1], data[2])  # type: ignore
 
 
@@ -243,25 +254,59 @@ class Event(Serializable):
     appears as an Action.signal or is otherwise persisted.
     """
 
-    def _serialize_payload(self) -> JSONValue:
-        """Subclasses override this to provide their payload. Default: empty dict."""
-        return {}
+    """
+    A persistent game object stored in Hiccup.entities, keyed by EntityID.
 
-    def serialize(self) -> JSONValue:
-        return self._serialize_payload()
+    Examples: Human NPCs, Locations, the Player, Satchels, DragonicQuests.
+
+    Subclasses must implement:
+      - version      → int, increment when the serialized format changes
+      - _serialize() → JSONValue payload (without version wrapper)
+      - _deserialize(data, version) → reconstruct from payload
+      - tag()        → globally unique string, e.g. "hofferson.Human"
+    """
+
+    @property
+    @abstractmethod
+    def version(self) -> int: ...
+
+    @abstractmethod
+    def _serialize(self) -> JSONValue: ...
+
+    @staticmethod
+    @abstractmethod
+    def tag() -> str: ...
 
     @classmethod
-    def deserialize(cls: Type[R], data: JSONValue) -> R:
-        """
-        Reconstruct from a payload dict (not the full envelope).
-        Called by deserialize() which has already stripped the tag.
-        Default: stateless, construct with no args.
-        """
-        return cls()  # type: ignore
+    @abstractmethod
+    def _deserialize(cls, data: JSONValue, version: int) -> Self: ...
+
+    def serialize(self) -> JSONValue:
+        """Return [version, payload] suitable for storage."""
+        return [self.version, self._serialize()]
+
+    @classmethod
+    def deserialize(cls, data: JSONValue) -> Self:
+        """Reconstruct an Entity from [version, payload]. Raises DeserializeException on bad input."""
+        if not isinstance(data, list) or len(data) < 2:
+            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+        version = data[0]
+        if not isinstance(version, int):
+            raise DeserializeException(f"Expected int version, got {version!r}")
+        return cls._deserialize(data[1], version)
+
+
+class NoEvent(StatelessSerializable, Event):
+    """
+    Placeholder for no events. Blank events used to be represented by a vanilla
+    Event class but this is no longer possible because Event is an ABC now. Note
+    that sending a plain Event would have triggered an error but the NoEvent
+    class will silently be ignored by mail_event
+    """
 
     @staticmethod
     def tag() -> str:
-        return "haddock.Event"
+        return "haddock.NoEvent"
 
 
 class EngineEvent(Event):
@@ -277,7 +322,7 @@ class EngineEvent(Event):
         return "haddock.EngineEvent"
 
 
-class PopStateEvent(EngineEvent):
+class PopStateEvent(StatelessSerializable, EngineEvent):
     """Remove the top state from Hiccup's state stack."""
 
     @staticmethod
@@ -285,7 +330,7 @@ class PopStateEvent(EngineEvent):
         return "haddock.PopStateEvent"
 
 
-class AppendStateEvent(EngineEvent):
+class AppendStateEvent(StatelessSerializable, EngineEvent):
     """Push a new state onto Hiccup's state stack."""
 
     state: State
@@ -302,7 +347,7 @@ class HaddockEvent(Event):
         return "haddock.HaddockEvent"
 
 
-class TeamAssembled(HaddockEvent):
+class TeamAssembled(StatelessSerializable, HaddockEvent):
     """
     Fired once when the engine finishes its boot sequence.
 
@@ -335,16 +380,18 @@ class EventSeries(EngineEvent):
     def tag() -> str:
         return "haddock.EventSeries"
 
-    def _serialize_payload(self) -> JSONValue:
+    def _serialize(self) -> JSONValue:
         return [serialize(e) for e in self.events]
 
     @classmethod
-    def deserialize(cls: Type["EventSeries"], data: JSONValue) -> "EventSeries":  # type: ignore
+    def _deserialize(cls: Type["EventSeries"], data: JSONValue) -> "EventSeries":  # type: ignore
         if not isinstance(data, list):
-            raise DeserializeException(
-                f"Expected list for EventSeries, got {data!r}"
-            )
+            raise DeserializeException(f"Expected list for EventSeries, got {data!r}")
         return cls([deserialize(item) for item in data])  # type: ignore
+
+    @property
+    def version(self) -> int:
+        return 1
 
 
 # ---------------------------------------------------------------------------
@@ -363,12 +410,10 @@ class Application(ABC):
     @abstractmethod
     def get_mount_point(self) -> object:
         """Return the root container widget that content is mounted into."""
-        ...
 
     @abstractmethod
     def get_story(self) -> "State | None":
         """Return the active Story widget, or None if no Story is mounted."""
-        ...
 
 
 # ---------------------------------------------------------------------------
@@ -420,12 +465,10 @@ class StateRider(Generic[S], ABC):
     @abstractmethod
     def render(self, state: S) -> RenderCommand:
         """Produce a RenderCommand representing the current visual state."""
-        ...
 
     @abstractmethod
     def roll_call(self, state: S, event: Event) -> None:
         """React to an event while this state is active."""
-        ...
 
 
 class EntityRider(Generic[E], ABC):
@@ -604,6 +647,9 @@ class Hiccup:
         """
         print(f"Got new event {event}")
 
+        if isinstance(event, NoEvent):
+            return
+
         if isinstance(event, EngineEvent):
             for rider in self.event_riders:
                 if isinstance(event, rider.event_type):
@@ -662,9 +708,7 @@ class Hiccup:
         self.event_queue.append(event)
         self._dispatch_events()
 
-    def enroll_rider(
-        self, rider: "StateRider | EntityRider | EventRider"
-    ) -> None:
+    def enroll_rider(self, rider: "StateRider | EntityRider | EventRider") -> None:
         """Register a rider. Called automatically by register_clan()."""
         if isinstance(rider, StateRider):
             self.state_riders.append(rider)
@@ -673,7 +717,7 @@ class Hiccup:
         if isinstance(rider, EventRider):
             self.event_riders.append(rider)
 
-    def declare_chief(self, chief: RenderChief) -> None:
+    def declare_chief(self, chief: RenderChief[C]) -> None:
         """Register a render chief. Must be called explicitly in main.py."""
         self.render_chiefs.append(chief)
 
@@ -705,7 +749,8 @@ class Hiccup:
         Raises FileNotFoundError if the directory does not exist.
         Raises DeserializeException (indirectly) if a type is not registered.
         """
-        import json, os
+        import json
+        import os
 
         os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
 
@@ -730,13 +775,15 @@ class Hiccup:
         Raises FileNotFoundError if path does not exist.
         Raises DeserializeException if a tag is unknown or data is malformed.
         """
-        import json
 
         with open(path, "r") as f:
             payload: JSONObject = json.load(f)
 
         self.states = list(map(deserialize, payload["states"]))  # type: ignore
-        self.entities = {deserialize(item[0]): deserialize(item[1]) for item in payload["entities"]}  # type: ignore
+        self.entities = {  # type: ignore
+            deserialize(item[0]): deserialize(item[1])
+            for item in payload["entities"]  # type: ignore
+        }
 
     def call_entity(
         self,
@@ -753,10 +800,9 @@ class Hiccup:
         """
         if position in self.entities:
             return self.entities[position]
-        elif default is not None:
+        if default is not None:
             return self.entities.setdefault(position, default())
-        else:
-            raise KeyError(position)
+        raise KeyError(position)
 
     def call_entities(
         self,

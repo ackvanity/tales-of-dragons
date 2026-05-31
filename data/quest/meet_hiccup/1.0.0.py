@@ -1,23 +1,19 @@
 from dragonic.interactions import (
     send_dialogue,
     send_prompt,
-    add_character_hook,
     send_story,
 )
 from dragonic.core import world
 from dragonic.base import NoOpSyscall
 
-VERSION = (1,0,0)
+VERSION = (1, 0, 0)
+
 
 async def main():
     await NoOpSyscall()
-    await send_dialogue(
-        "???", "Hi there folks, and welcome to Berk. Who are you?"
-    )
-    res = await send_prompt([f"Hi, I'm {await world.player.name}!"])
-    await send_dialogue(
-        await world.player.name, f"Hi, I'm {await world.player.name}!"
-    )
+    await send_dialogue("???", "Hi there folks, and welcome to Berk. Who are you?")
+    await send_prompt([f"Hi, I'm {await world.player.name}!"])
+    await send_dialogue(await world.player.name, f"Hi, I'm {await world.player.name}!")
     await send_dialogue(
         "???",
         f"Well, nice to know you, {await world.player.name}. My name's Hiccup! Usually my dad does greetings, but he's gone for willow bark, again.",
@@ -25,10 +21,8 @@ async def main():
     await send_dialogue(
         "Hiccup", "Hey, do you happen to be good with tools or something?"
     )
-    await send_prompt([f"Well, I'm pretty good in crafting..."])
-    await send_dialogue(
-        await world.player.name, f"Well, I'm pretty good in crafting..."
-    )
+    await send_prompt(["Well, I'm pretty good in crafting..."])
+    await send_dialogue(await world.player.name, "Well, I'm pretty good in crafting...")
     await send_dialogue("Hiccup", "Great! Let's go to my workshop.")
     await send_dialogue(await world.player.name, "Oh, uh, sure. I guess.")
     await send_dialogue(

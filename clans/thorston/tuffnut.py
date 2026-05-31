@@ -1,4 +1,3 @@
-from typing import Type
 import haddock
 from librarians.core import get_save_files
 

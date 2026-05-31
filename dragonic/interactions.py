@@ -52,12 +52,15 @@ class DialogueResult(haddock.Serializable):
                 f"Expected dict for DialogueResult, got {data!r}"
             )
         return cls(index=data["index"], text=data["text"])  # type: ignore
-    
+
+
 # ---------------------------------------------------------------------------
 # Syscall types (yielded by helper functions below)
 # ---------------------------------------------------------------------------
 
-from dragonic.base import Syscall # Import here to avoid circular import!
+# Import here to avoid circular import!
+from dragonic.base import Syscall  # noqa: E402
+
 
 class StorySyscall(Syscall):
     """Base class for syscalls that produce visible output to the player."""
@@ -175,5 +178,16 @@ async def add_character_hook(character: str, line: str) -> None:
     """
     syscall = AddCharacterHookSyscall()
     syscall.character = character
+    syscall.line = line
+    return await syscall
+
+
+async def send_debug(line: str) -> None:
+    """
+    Sends a debug line. Similar to send_story but attributes dialogue to the debug
+    mode
+    """
+    syscall = SendDialogueSyscall()
+    syscall.speaker = "DEBUG"
     syscall.line = line
     return await syscall

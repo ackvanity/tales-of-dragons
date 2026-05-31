@@ -8,9 +8,7 @@ class RuffnutInitiationStateRenderChief(
 ):
     command_type = RuffnutInitiationRenderCommand
 
-    def render(
-        self, command: RuffnutInitiationRenderCommand, application
-    ) -> None:
+    def render(self, command: RuffnutInitiationRenderCommand, application) -> None:
         haddock.chieftain.mail_event(haddock.PopStateEvent())
         haddock.chieftain.mail_event(ReturnDataEvent(None, "meet_hiccup"))
         # pass

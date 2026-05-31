@@ -16,6 +16,7 @@ from librarians.hofferson import astrid
 from librarians import core
 from clans.hofferson import Action
 import random
+from typing_extensions import Self
 
 modules = []
 """
@@ -52,16 +53,20 @@ class HumanInteractEngineEvent(HumanInteractEventBase, haddock.EngineEvent):
     def tag() -> str:
         return "hofferson.HumanInteractEngineEvent"
 
-    def _serialize_payload(self) -> haddock.JSONValue:
+    def _serialize(self) -> haddock.JSONValue:
         return self.to
 
     @classmethod
-    def deserialize(cls, data: haddock.JSONValue) -> "HumanInteractEngineEvent":  # type: ignore
+    def _deserialize(cls, data: haddock.JSONValue) -> "HumanInteractEngineEvent":  # type: ignore
         if not isinstance(data, str):
             raise haddock.DeserializeException(
                 f"Expected str for HumanInteractEngineEvent, got {data!r}"
             )
         return cls(data)
+
+    @property
+    def version(self) -> int:
+        return 1
 
 
 class HumanInteractEvent(HumanInteractEventBase, haddock.Event):
@@ -95,6 +100,24 @@ class AddDialogueEvent(haddock.EngineEvent):
         self.event = event
         self.id = id
 
+    def _serialize(self) -> haddock.JSONValue:
+        return [self.character, self.line, haddock.serialize(self.event), self.id]
+
+    @classmethod
+    def _deserialize(cls, data: haddock.JSONValue, version: int) -> Self:
+        if version == 1:
+            return cls(data[0], data[1], haddock.deserialize(data[2]), data[3])  # type: ignore
+        else:
+            raise haddock.DeserializeVersionUnsupportedException()
+
+    @staticmethod
+    def tag() -> str:
+        return "jorgenson.AddDialogueEvent"
+
+    @property
+    def version(self) -> int:
+        return 1
+
 
 class BaseAddDialogueEvent(haddock.Event):
     """
@@ -117,6 +140,24 @@ class BaseAddDialogueEvent(haddock.Event):
         self.event = event
         self.id = id
 
+    def _serialize(self) -> haddock.JSONValue:
+        return [self.character, self.line, haddock.serialize(self.event), self.id]
+
+    @classmethod
+    def _deserialize(cls, data: haddock.JSONValue, version: int) -> Self:
+        if version == 1:
+            return cls(data[0], data[1], haddock.deserialize(data[2]), data[3])  # type: ignore
+        else:
+            raise haddock.DeserializeVersionUnsupportedException()
+
+    @staticmethod
+    def tag() -> str:
+        return "jorgenson.BaseAddDialogueEvent"
+
+    @property
+    def version(self) -> int:
+        return 1
+
 
 class RemoveDialogueEvent(haddock.Event):
     """
@@ -137,16 +178,20 @@ class RemoveDialogueEvent(haddock.Event):
     def tag() -> str:
         return "hofferson.RemoveDialogueEvent"
 
-    def _serialize_payload(self) -> haddock.JSONValue:
+    def _serialize(self) -> haddock.JSONValue:
         return {"character": self.character, "id": self.id}
 
     @classmethod
-    def deserialize(cls, data: haddock.JSONValue) -> "RemoveDialogueEvent":  # type: ignore
+    def _deserialize(cls, data: haddock.JSONValue) -> "RemoveDialogueEvent":  # type: ignore
         if not isinstance(data, dict):
             raise haddock.DeserializeException(
                 f"Expected dict for RemoveDialogueEvent, got {data!r}"
             )
         return cls(data["character"], data["id"])  # type: ignore
+
+    @property
+    def version(self) -> int:
+        return 1
 
 
 # ---------------------------------------------------------------------------
@@ -177,9 +222,7 @@ class Human(haddock.Entity):
 
     def __init__(self, id: str) -> None:
         self.id = id
-        data = astrid.parse_character_data(
-            core.get_data(f"character/human/{id}")
-        )
+        data = astrid.parse_character_data(core.get_data(f"character/human/{id}"))
         self.name = data.name
         self.health = data.variables.health
         self.location = data.variables.location
@@ -213,7 +256,8 @@ class Human(haddock.Entity):
             obj.health = data["health"]  # type: ignore
             obj.location = data["location"]  # type: ignore
             obj.extra_character_actions = [  # type: ignore
-                haddock.deserialize(a) for a in data.get("extra_character_actions", [])  # type: ignore
+                haddock.deserialize(a)
+                for a in data.get("extra_character_actions", [])  # type: ignore
             ]
             return obj
         raise haddock.DeserializeVersionUnsupportedException()
@@ -225,16 +269,12 @@ class Human(haddock.Entity):
     @property
     def actions(self) -> list[Action]:
         """Return the NPC's static actions (currently just a Goodbye option)."""
-        return [
-            Action(line=f"Goodbye {self.name}", signal=haddock.PopStateEvent())
-        ]
+        return [Action(line=f"Goodbye {self.name}", signal=haddock.PopStateEvent())]
 
     @property
     def line(self) -> str:
         """Return a random greeting line from the NPC's menu_lines."""
-        data = astrid.parse_character_data(
-            core.get_data(f"character/human/{self.id}")
-        )
+        data = astrid.parse_character_data(core.get_data(f"character/human/{self.id}"))
         return random.choice(data.menu_lines)
 
 
@@ -316,9 +356,7 @@ class HumanInteractRider(haddock.EventRider[HumanInteractEngineEvent]):
     event_type = HumanInteractEngineEvent
 
     def roll_call(self, event: HumanInteractEngineEvent) -> None:
-        haddock.chieftain.mail_event(
-            haddock.AppendStateEvent(Talking(event.to))
-        )
+        haddock.chieftain.mail_event(haddock.AppendStateEvent(Talking(event.to)))
 
 
 class AddDialogueEventRider(haddock.EventRider[AddDialogueEvent]):
@@ -332,9 +370,7 @@ class AddDialogueEventRider(haddock.EventRider[AddDialogueEvent]):
     def roll_call(self, event: AddDialogueEvent) -> None:
         get_human(event.character)
         haddock.chieftain.mail_event(
-            BaseAddDialogueEvent(
-                event.character, event.line, event.event, event.id
-            )
+            BaseAddDialogueEvent(event.character, event.line, event.event, event.id)
         )
 
 
@@ -350,13 +386,8 @@ class HumanRider(haddock.EntityRider[Human]):
 
     def roll_call(self, entity: Human, event: haddock.Event) -> None:
         if isinstance(event, BaseAddDialogueEvent):
-            print(
-                f"Trying to add a line to {event.character} - now at {entity.id}"
-            )
-        if (
-            isinstance(event, BaseAddDialogueEvent)
-            and event.character == entity.id
-        ):
+            print(f"Trying to add a line to {event.character} - now at {entity.id}")
+        if isinstance(event, BaseAddDialogueEvent) and event.character == entity.id:
             print("Adding line!")
             entity.extra_character_actions.append(
                 Action(
@@ -365,10 +396,7 @@ class HumanRider(haddock.EntityRider[Human]):
                     id=event.id,
                 )
             )
-        if (
-            isinstance(event, RemoveDialogueEvent)
-            and event.character == entity.id
-        ):
+        if isinstance(event, RemoveDialogueEvent) and event.character == entity.id:
             entity.extra_character_actions = [
                 a for a in entity.extra_character_actions if a.id != event.id
             ]
