@@ -384,7 +384,9 @@ class EventSeries(EngineEvent):
         return [serialize(e) for e in self.events]
 
     @classmethod
-    def _deserialize(cls: Type["EventSeries"], data: JSONValue) -> "EventSeries":  # type: ignore
+    def _deserialize(
+        cls: Type["EventSeries"], data: JSONValue, version: int
+    ) -> "EventSeries":  # type: ignore
         if not isinstance(data, list):
             raise DeserializeException(f"Expected list for EventSeries, got {data!r}")
         return cls([deserialize(item) for item in data])  # type: ignore

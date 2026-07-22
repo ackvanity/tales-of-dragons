@@ -57,7 +57,9 @@ class HumanInteractEngineEvent(HumanInteractEventBase, haddock.EngineEvent):
         return self.to
 
     @classmethod
-    def _deserialize(cls, data: haddock.JSONValue) -> "HumanInteractEngineEvent":  # type: ignore
+    def _deserialize(
+        cls, data: haddock.JSONValue, version: int
+    ) -> "HumanInteractEngineEvent":  # type: ignore
         if not isinstance(data, str):
             raise haddock.DeserializeException(
                 f"Expected str for HumanInteractEngineEvent, got {data!r}"
@@ -182,7 +184,9 @@ class RemoveDialogueEvent(haddock.Event):
         return {"character": self.character, "id": self.id}
 
     @classmethod
-    def _deserialize(cls, data: haddock.JSONValue) -> "RemoveDialogueEvent":  # type: ignore
+    def _deserialize(
+        cls, data: haddock.JSONValue, version: int
+    ) -> "RemoveDialogueEvent":  # type: ignore
         if not isinstance(data, dict):
             raise haddock.DeserializeException(
                 f"Expected dict for RemoveDialogueEvent, got {data!r}"

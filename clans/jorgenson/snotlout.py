@@ -135,7 +135,7 @@ class ReturnDataEvent(haddock.Event):
         return {"data": payload, "script": self.script}
 
     @classmethod
-    def _deserialize(cls, data: haddock.JSONValue) -> "ReturnDataEvent":  # type: ignore
+    def _deserialize(cls, data: haddock.JSONValue, version: int) -> "ReturnDataEvent":  # type: ignore
         if not isinstance(data, dict):
             raise haddock.DeserializeException(
                 f"Expected dict for ReturnDataEvent, got {data!r}"

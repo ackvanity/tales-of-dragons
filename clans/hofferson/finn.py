@@ -61,7 +61,9 @@ class LocationTeleportEngineEvent(LocationTeleportEventBase, haddock.EngineEvent
         return self.to
 
     @classmethod
-    def _deserialize(cls, data: haddock.JSONValue) -> "LocationTeleportEngineEvent":  # type: ignore
+    def _deserialize(
+        cls, data: haddock.JSONValue, version: int
+    ) -> "LocationTeleportEngineEvent":  # type: ignore
         if not isinstance(data, str):
             raise haddock.DeserializeException(
                 f"Expected str for LocationTeleportEngineEvent, got {data!r}"

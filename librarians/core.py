@@ -72,9 +72,9 @@ def get_save_files() -> list[tuple[str, str]]:
     print("loaddragonsavefiles")
     files: list[tuple[str, str]] = []
     for save in os.listdir(f"{SAVE_DIRECTORY}"):
-        print("parsefilefromsave")
         print(save)
         parsed = parse_save_file(save)
+        print("parsefilefromsave", parsed)
         if parsed:
             files.append(parsed)
     return files
