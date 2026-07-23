@@ -42,7 +42,9 @@ def get_quest(
         parts = quest.split(".")
         code_version = (int(parts[0]), int(parts[1]), int(parts[2]))
 
-        if save_version is None or version_compatible(save_version, code_version):
+        if save_version is None or version_compatible(
+            save_version, code_version
+        ):
             valid_versions.append(code_version)
 
     if not len(valid_versions):

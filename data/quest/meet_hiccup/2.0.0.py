@@ -79,7 +79,9 @@ async def crash_land():
     await send_story(
         "A Night Fury walks past you. Its black scales hide the sun from you. Its growl vibrates your lungs. Your head shakes. You want to move. But you can't even stay awake."
     )
-    await send_dialogue("???", "Hey! Toothless, what did you find this time bud...?")
+    await send_dialogue(
+        "???", "Hey! Toothless, what did you find this time bud...?"
+    )
     await send_story(
         "The fish-thin kid rubs his fingers around your left hand, looking for a pulse. The Night Fury stares into your heavy eyelids, mildly touching your bruised face. You want to drift away, but the confusion, steady growl, and the talk of a small-ish Viking teen stops you from doing so."
     )
@@ -121,7 +123,9 @@ async def crash_land():
                 "Oh, my bad. My name's Hiccup, and that Night Fury's Toothless - don't get scared by him!",
             )
             await send_dialogue("HICCUP", "So, who are you?")
-            await send_dialogue("YOU", (await send_prompt(["I... don't know..."])).text)
+            await send_dialogue(
+                "YOU", (await send_prompt(["I... don't know..."])).text
+            )
 
             await who_am_i()
 
@@ -149,7 +153,9 @@ async def crash_land():
             )
             await send_dialogue(
                 "YOU",
-                (await send_prompt(["I'm... I'm... uh, what's my name...?"])).text,
+                (
+                    await send_prompt(["I'm... I'm... uh, what's my name...?"])
+                ).text,
             )
 
             await who_am_i()
@@ -182,7 +188,9 @@ async def crash_land():
             )
             await send_dialogue(
                 "YOU",
-                (await send_prompt(["I'm... I'm... uh, what's my name...?"])).text,
+                (
+                    await send_prompt(["I'm... I'm... uh, what's my name...?"])
+                ).text,
             )
 
             await who_am_i()

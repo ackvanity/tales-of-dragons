@@ -116,13 +116,15 @@ def _init_game(player_name):
 
     # Player inventory
     haddock.chieftain.entities[haddock.EntityID("ingerman", "satchel", "1")] = (
-        fishlegs.SmallSatchel([], haddock.EntityID("jorgenson", "player", "player"))
+        fishlegs.SmallSatchel(
+            [], haddock.EntityID("jorgenson", "player", "player")
+        )
     )
 
     # Player entity
-    haddock.chieftain.entities[haddock.EntityID("jorgenson", "player", "player")] = (
-        snotlout.Player(player_name)
-    )
+    haddock.chieftain.entities[
+        haddock.EntityID("jorgenson", "player", "player")
+    ] = snotlout.Player(player_name)
 
     # Active quests
     haddock.chieftain.entities[

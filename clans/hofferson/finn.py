@@ -45,7 +45,9 @@ class LocationTeleportEventBase:
         self.to = to
 
 
-class LocationTeleportEngineEvent(LocationTeleportEventBase, haddock.EngineEvent):
+class LocationTeleportEngineEvent(
+    LocationTeleportEventBase, haddock.EngineEvent
+):
     """
     Engine event that pushes a Wandering state for the target location.
 
@@ -182,7 +184,9 @@ class Location(haddock.Entity):
     def ambient(self) -> str:
         """Return a random ambient description line for this location."""
         return random.choice(
-            librarian.parse_location_data(core.get_data(f"location/{self.id}")).ambient
+            librarian.parse_location_data(
+                core.get_data(f"location/{self.id}")
+            ).ambient
         )
 
 
@@ -271,7 +275,9 @@ class LocationTeleportRider(haddock.EventRider[LocationTeleportEngineEvent]):
     event_type = LocationTeleportEngineEvent
 
     def roll_call(self, event: LocationTeleportEngineEvent) -> None:
-        haddock.chieftain.mail_event(haddock.AppendStateEvent(Wandering(event.to)))
+        haddock.chieftain.mail_event(
+            haddock.AppendStateEvent(Wandering(event.to))
+        )
 
 
 class WanderingRider(haddock.StateRider[Wandering]):

@@ -151,7 +151,9 @@ class State(Serializable):
     def deserialize(cls: Type[S], data: JSONValue) -> S:
         """Reconstruct a State from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+            raise DeserializeException(
+                f"Expected [version, payload], got {data!r}"
+            )
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -194,7 +196,9 @@ class Entity(Serializable):
     def deserialize(cls: Type[E], data: JSONValue) -> E:
         """Reconstruct an Entity from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+            raise DeserializeException(
+                f"Expected [version, payload], got {data!r}"
+            )
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -233,7 +237,9 @@ class EntityID(Serializable):
     def deserialize(cls, data: JSONValue) -> "EntityID":
         """Reconstruct an EntityID from [clan, species, name]."""
         if not isinstance(data, list) or len(data) < 3:
-            raise DeserializeException(f"Expected [clan, species, name], got {data!r}")
+            raise DeserializeException(
+                f"Expected [clan, species, name], got {data!r}"
+            )
         return cls(data[0], data[1], data[2])  # type: ignore
 
 
@@ -289,7 +295,9 @@ class Event(Serializable):
     def deserialize(cls, data: JSONValue) -> Self:
         """Reconstruct an Entity from [version, payload]. Raises DeserializeException on bad input."""
         if not isinstance(data, list) or len(data) < 2:
-            raise DeserializeException(f"Expected [version, payload], got {data!r}")
+            raise DeserializeException(
+                f"Expected [version, payload], got {data!r}"
+            )
         version = data[0]
         if not isinstance(version, int):
             raise DeserializeException(f"Expected int version, got {version!r}")
@@ -388,7 +396,9 @@ class EventSeries(EngineEvent):
         cls: Type["EventSeries"], data: JSONValue, version: int
     ) -> "EventSeries":  # type: ignore
         if not isinstance(data, list):
-            raise DeserializeException(f"Expected list for EventSeries, got {data!r}")
+            raise DeserializeException(
+                f"Expected list for EventSeries, got {data!r}"
+            )
         return cls([deserialize(item) for item in data])  # type: ignore
 
     @property
@@ -710,7 +720,9 @@ class Hiccup:
         self.event_queue.append(event)
         self._dispatch_events()
 
-    def enroll_rider(self, rider: "StateRider | EntityRider | EventRider") -> None:
+    def enroll_rider(
+        self, rider: "StateRider | EntityRider | EventRider"
+    ) -> None:
         """Register a rider. Called automatically by register_clan()."""
         if isinstance(rider, StateRider):
             self.state_riders.append(rider)

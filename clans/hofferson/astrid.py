@@ -103,7 +103,12 @@ class AddDialogueEvent(haddock.EngineEvent):
         self.id = id
 
     def _serialize(self) -> haddock.JSONValue:
-        return [self.character, self.line, haddock.serialize(self.event), self.id]
+        return [
+            self.character,
+            self.line,
+            haddock.serialize(self.event),
+            self.id,
+        ]
 
     @classmethod
     def _deserialize(cls, data: haddock.JSONValue, version: int) -> Self:
@@ -143,7 +148,12 @@ class BaseAddDialogueEvent(haddock.Event):
         self.id = id
 
     def _serialize(self) -> haddock.JSONValue:
-        return [self.character, self.line, haddock.serialize(self.event), self.id]
+        return [
+            self.character,
+            self.line,
+            haddock.serialize(self.event),
+            self.id,
+        ]
 
     @classmethod
     def _deserialize(cls, data: haddock.JSONValue, version: int) -> Self:
@@ -226,7 +236,9 @@ class Human(haddock.Entity):
 
     def __init__(self, id: str) -> None:
         self.id = id
-        data = astrid.parse_character_data(core.get_data(f"character/human/{id}"))
+        data = astrid.parse_character_data(
+            core.get_data(f"character/human/{id}")
+        )
         self.name = data.name
         self.health = data.variables.health
         self.location = data.variables.location
@@ -273,12 +285,16 @@ class Human(haddock.Entity):
     @property
     def actions(self) -> list[Action]:
         """Return the NPC's static actions (currently just a Goodbye option)."""
-        return [Action(line=f"Goodbye {self.name}", signal=haddock.PopStateEvent())]
+        return [
+            Action(line=f"Goodbye {self.name}", signal=haddock.PopStateEvent())
+        ]
 
     @property
     def line(self) -> str:
         """Return a random greeting line from the NPC's menu_lines."""
-        data = astrid.parse_character_data(core.get_data(f"character/human/{self.id}"))
+        data = astrid.parse_character_data(
+            core.get_data(f"character/human/{self.id}")
+        )
         return random.choice(data.menu_lines)
 
 
@@ -360,7 +376,9 @@ class HumanInteractRider(haddock.EventRider[HumanInteractEngineEvent]):
     event_type = HumanInteractEngineEvent
 
     def roll_call(self, event: HumanInteractEngineEvent) -> None:
-        haddock.chieftain.mail_event(haddock.AppendStateEvent(Talking(event.to)))
+        haddock.chieftain.mail_event(
+            haddock.AppendStateEvent(Talking(event.to))
+        )
 
 
 class AddDialogueEventRider(haddock.EventRider[AddDialogueEvent]):
@@ -374,7 +392,9 @@ class AddDialogueEventRider(haddock.EventRider[AddDialogueEvent]):
     def roll_call(self, event: AddDialogueEvent) -> None:
         get_human(event.character)
         haddock.chieftain.mail_event(
-            BaseAddDialogueEvent(event.character, event.line, event.event, event.id)
+            BaseAddDialogueEvent(
+                event.character, event.line, event.event, event.id
+            )
         )
 
 
@@ -390,8 +410,13 @@ class HumanRider(haddock.EntityRider[Human]):
 
     def roll_call(self, entity: Human, event: haddock.Event) -> None:
         if isinstance(event, BaseAddDialogueEvent):
-            print(f"Trying to add a line to {event.character} - now at {entity.id}")
-        if isinstance(event, BaseAddDialogueEvent) and event.character == entity.id:
+            print(
+                f"Trying to add a line to {event.character} - now at {entity.id}"
+            )
+        if (
+            isinstance(event, BaseAddDialogueEvent)
+            and event.character == entity.id
+        ):
             print("Adding line!")
             entity.extra_character_actions.append(
                 Action(
@@ -400,7 +425,10 @@ class HumanRider(haddock.EntityRider[Human]):
                     id=event.id,
                 )
             )
-        if isinstance(event, RemoveDialogueEvent) and event.character == entity.id:
+        if (
+            isinstance(event, RemoveDialogueEvent)
+            and event.character == entity.id
+        ):
             entity.extra_character_actions = [
                 a for a in entity.extra_character_actions if a.id != event.id
             ]

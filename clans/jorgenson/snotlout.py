@@ -135,7 +135,9 @@ class ReturnDataEvent(haddock.Event):
         return {"data": payload, "script": self.script}
 
     @classmethod
-    def _deserialize(cls, data: haddock.JSONValue, version: int) -> "ReturnDataEvent":  # type: ignore
+    def _deserialize(
+        cls, data: haddock.JSONValue, version: int
+    ) -> "ReturnDataEvent":  # type: ignore
         if not isinstance(data, dict):
             raise haddock.DeserializeException(
                 f"Expected dict for ReturnDataEvent, got {data!r}"
@@ -148,7 +150,9 @@ class ReturnDataEvent(haddock.Event):
             )
         kind = raw["type"]
         if kind == "null":
-            value: haddock.JSONValue | dragonic.interactions.DialogueResult = None
+            value: haddock.JSONValue | dragonic.interactions.DialogueResult = (
+                None
+            )
         elif kind == "serializable":
             value = haddock.deserialize(raw["value"])  # type: ignore
         else:
@@ -211,7 +215,9 @@ class SendPromptEventRider(haddock.EventRider[SendPromptEvent]):
                             haddock.EventSeries(
                                 [
                                     ReturnDataEvent(
-                                        dragonic.interactions.DialogueResult(i, option),
+                                        dragonic.interactions.DialogueResult(
+                                            i, option
+                                        ),
                                         event.script,
                                     ),
                                     haddock.PopStateEvent(),
@@ -259,7 +265,8 @@ class Prompt(haddock.State):
         return {
             "script": self.script,
             "options": [
-                [action, haddock.serialize(event)] for action, event in self.options
+                [action, haddock.serialize(event)]
+                for action, event in self.options
             ],
         }
 
@@ -559,7 +566,9 @@ class DragonicState(haddock.State):
         return 1
 
     def _serialize(self) -> haddock.JSONValue:
-        raise NotImplementedError("DragonicState serialization is not yet implemented")
+        raise NotImplementedError(
+            "DragonicState serialization is not yet implemented"
+        )
 
     @classmethod
     def _deserialize(
@@ -637,7 +646,9 @@ class DragonicQuest(haddock.Entity):
             if entry is None:
                 stream.append({"type": "null"})
             elif isinstance(entry, dragonic.interactions.DialogueResult):
-                stream.append({"type": "dialogue_result", "value": entry.serialize()})
+                stream.append(
+                    {"type": "dialogue_result", "value": entry.serialize()}
+                )
             elif haddock.is_json(entry):
                 stream.append({"type": "json", "value": entry})  # type: ignore
             else:
@@ -676,7 +687,9 @@ class DragonicQuest(haddock.Entity):
                     stream.append(None)  # type: ignore
                 elif kind == "dialogue_result":
                     stream.append(
-                        dragonic.interactions.DialogueResult.deserialize(entry["value"])
+                        dragonic.interactions.DialogueResult.deserialize(
+                            entry["value"]
+                        )
                     )
                 else:
                     stream.append(entry["value"])  # type: ignore
@@ -691,7 +704,9 @@ class DragonicQuest(haddock.Entity):
     def tag() -> str:
         return "jorgenson.DragonicQuest"
 
-    def step(self, data: dragonic.base.ValueLike, dispatch_events: bool = True) -> None:
+    def step(
+        self, data: dragonic.base.ValueLike, dispatch_events: bool = True
+    ) -> None:
         print(f"Advancing state with data {data}.")
         """
         Advance the quest coroutine one step by sending data into it.
@@ -719,7 +734,9 @@ class DragonicQuest(haddock.Entity):
             if not dispatch_events:
                 return
 
-            if isinstance(syscall, dragonic.interactions.AddCharacterHookSyscall):
+            if isinstance(
+                syscall, dragonic.interactions.AddCharacterHookSyscall
+            ):
                 character = syscall.character
                 line = syscall.line
                 line_id = str(uuid.uuid4())
@@ -741,11 +758,15 @@ class DragonicQuest(haddock.Entity):
                 return
 
             if isinstance(syscall, dragonic.interactions.SendPromptSyscall):
-                haddock.chieftain.mail_event(SendPromptEvent(syscall.options, self.id))
+                haddock.chieftain.mail_event(
+                    SendPromptEvent(syscall.options, self.id)
+                )
                 return
 
             if isinstance(syscall, dragonic.interactions.SendStorySyscall):
-                haddock.chieftain.mail_event(SendStoryEvent(syscall.text, self.id))
+                haddock.chieftain.mail_event(
+                    SendStoryEvent(syscall.text, self.id)
+                )
                 return
 
             if isinstance(syscall, dragonic.base.ReadAttrSyscall):

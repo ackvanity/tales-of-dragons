@@ -27,7 +27,9 @@ class QuestVersionExistsException(QuestPackageException):
     """
 
 
-def migrate_quest(id: str, code: str, version: tuple[int, int, int], target_dir: str):
+def migrate_quest(
+    id: str, code: str, version: tuple[int, int, int], target_dir: str
+):
     os.makedirs(target_dir, exist_ok=True)
     file_name = target_dir + "/" + ".".join(list(map(str, version))) + ".py"
 

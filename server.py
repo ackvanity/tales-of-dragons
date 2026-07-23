@@ -43,6 +43,9 @@ haddock.chieftain.register_clan(johann)
 class FlaskApplication:
     send_data: Callable[[haddock.JSONValue], None]
 
+    def __init__(self, send_data):
+        self.send_data = send_data
+
 
 app = Flask(__name__)
 sock = Sock(app)
@@ -77,13 +80,15 @@ def spwan(name):
 
     # Player inventory
     haddock.chieftain.entities[haddock.EntityID("ingerman", "satchel", "1")] = (
-        fishlegs.SmallSatchel([], haddock.EntityID("jorgenson", "player", "player"))
+        fishlegs.SmallSatchel(
+            [], haddock.EntityID("jorgenson", "player", "player")
+        )
     )
 
     # Player entity
-    haddock.chieftain.entities[haddock.EntityID("jorgenson", "player", "player")] = (
-        snotlout.Player(name)
-    )
+    haddock.chieftain.entities[
+        haddock.EntityID("jorgenson", "player", "player")
+    ] = snotlout.Player(name)
 
     # Active quests
     haddock.chieftain.entities[
@@ -110,7 +115,9 @@ def load(id):
 
 @sock.route("/berk")
 def berk(ws):
-    haddock.chieftain.application
+    haddock.chieftain.application = FlaskApplication(
+        lambda data: ws.send(json.serialize(data))
+    )
     while True:
         data = ws.receive()
         event = haddock.deserialize(json.loads(data))

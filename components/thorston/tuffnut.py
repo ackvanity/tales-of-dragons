@@ -59,7 +59,9 @@ class SaveGameList(CenterMiddle, TCSS):
         for save in self.saves:
             with Container(classes="save"):
                 yield Label(save[1], classes="name")
-                yield self.StartGameButton("Play", classes="play_game", save=save[0])
+                yield self.StartGameButton(
+                    "Play", classes="play_game", save=save[0]
+                )
         yield EventEmitButton(
             "New Viking",
             haddock.AppendStateEvent(CreateGameState()),
@@ -74,7 +76,9 @@ class SaveGameListRenderChief(haddock.RenderChief[SaveGameListRenderCommand]):
     def render(self, command: SaveGameListRenderCommand, application) -> None:
         async def _render() -> None:
             await application.clear_history()
-            await application.get_mount_point().mount(SaveGameList(saves=command.saves))
+            await application.get_mount_point().mount(
+                SaveGameList(saves=command.saves)
+            )
 
         asyncio.create_task(_render())
 

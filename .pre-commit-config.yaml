@@ -13,13 +13,6 @@ repos:
 
 - repo: local
   hooks:
-  - id: pip-require
-    name: pip require.txt
-    exclude: ^.*
-    entry: pip freeze > requirements.txt
-    language: system
-    always_run: true
-
   - id: berk-clatter
     name: Berkian clatters...
     exclude: ^.*

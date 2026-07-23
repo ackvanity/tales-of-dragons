@@ -355,7 +355,9 @@ class SatchelItemsRider(haddock.StateRider[SatchelItems]):
         def no_default():
             raise Exception("Satchel was a ghost?")
 
-        satchel: Satchel = haddock.chieftain.call_entity(state.satchel, no_default)  # type: ignore
+        satchel: Satchel = haddock.chieftain.call_entity(
+            state.satchel, no_default
+        )  # type: ignore
         padded = satchel.items + [
             NoItem() for _ in range(satchel.capacity - len(satchel.items))
         ]

@@ -115,7 +115,9 @@ def package(
     THIS WILL DELETE EVERYTHING IN THE DATA/ DIRECTORY AND CANNOT BE UNDONE!
     """
     if not headless:
-        std_console.print("[yellow bold]Operation cancelled by user.[/yellow bold]")
+        std_console.print(
+            "[yellow bold]Operation cancelled by user.[/yellow bold]"
+        )
         return
 
     std_console.print("[red bold]WARN: Deleting all files in data/[/red bold]")

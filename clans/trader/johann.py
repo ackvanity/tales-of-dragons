@@ -7,13 +7,17 @@ fishes: List[Type["Fish"]] = []
 
 
 def select_fish(fishes: List[Type["Fish"]]):
-    cls = random.choices(fishes, weights=[fish.proba_weight for fish in fishes], k=1)[0]
+    cls = random.choices(
+        fishes, weights=[fish.proba_weight for fish in fishes], k=1
+    )[0]
     return cls()
 
 
 class Fish(fishlegs.BaseItem):
     name: str = "Fish"
-    description: str = "A nice, fresh fish to stave you and your dragon's hunger."
+    description: str = (
+        "A nice, fresh fish to stave you and your dragon's hunger."
+    )
     energy: int = 1
     happiness: int = 1
     biome_freshwater: bool = False  # Freshwater biomes, like lakes and rivers
@@ -29,7 +33,9 @@ class Fish(fishlegs.BaseItem):
 
 class Salmon(Fish):
     name: str = "Salmon"
-    description: str = "A raw salmon. It's great eaten raw, greater when cooked."
+    description: str = (
+        "A raw salmon. It's great eaten raw, greater when cooked."
+    )
 
     biome_coastal = True
     biome_freshwater = True
@@ -91,7 +97,9 @@ class Cod(Fish):
         return ""
 
     @classmethod
-    def _deserialize(cls: type["Cod"], data: haddock.JSONValue, version: int) -> "Cod":
+    def _deserialize(
+        cls: type["Cod"], data: haddock.JSONValue, version: int
+    ) -> "Cod":
         return cls()
 
     @staticmethod
@@ -115,7 +123,9 @@ class Eel(Fish):
         return ""
 
     @classmethod
-    def _deserialize(cls: type["Eel"], data: haddock.JSONValue, version: int) -> "Eel":
+    def _deserialize(
+        cls: type["Eel"], data: haddock.JSONValue, version: int
+    ) -> "Eel":
         return cls()
 
     @staticmethod
