@@ -220,3 +220,5 @@ __marimo__/
 
 # Don't want diegetic mode to leak!
 .dragon-rider
+
+pyvenv.cfg
