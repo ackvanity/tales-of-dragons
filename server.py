@@ -7,10 +7,19 @@ from clans.jorgenson import snotlout
 from clans.thorston import tuffnut
 from clans.trader import johann
 from clans.thorston import ruffnut
+from components.hofferson.astrid import TalkingRenderChief
+from components.hofferson.finn import WanderingRenderChief
+from components.jorgenson.snotlout import (
+    PromptRenderChief,
+    DialogueRenderChief,
+    StoryRenderChief,
+)
 from librarians import core
 import json
 import uuid
 from collections.abc import Callable
+from components.thorston.ruffnut import RuffnutInitiationStateRenderChief
+from components.trader.johann import FishingRenderChief
 
 # ---------------------------------------------------------------------------
 # Register module cross-injections
@@ -39,9 +48,17 @@ haddock.chieftain.register_clan(tuffnut)
 haddock.chieftain.register_clan(ruffnut)
 haddock.chieftain.register_clan(johann)
 
+haddock.chieftain.declare_chief(PromptRenderChief())
+haddock.chieftain.declare_chief(DialogueRenderChief())
+haddock.chieftain.declare_chief(StoryRenderChief())
+haddock.chieftain.declare_chief(RuffnutInitiationStateRenderChief())
+haddock.chieftain.declare_chief(FishingRenderChief())
+haddock.chieftain.declare_chief(TalkingRenderChief())
+haddock.chieftain.declare_chief(WanderingRenderChief())
+
 
 class FlaskApplication:
-    send_data: Callable[[haddock.JSONValue], None]
+    send_data: Callable[[str, haddock.JSONValue], None]
 
     def __init__(self, send_data):
         self.send_data = send_data
@@ -116,13 +133,18 @@ def load(id):
 @sock.route("/berk")
 def berk(ws):
     haddock.chieftain.application = FlaskApplication(
-        lambda data: ws.send(json.serialize(data))
+        lambda tag, data: ws.send(json.dumps([tag, data]))
     )
+
+    haddock.chieftain.mail_event(haddock.TeamAssembled())
+
     while True:
+        haddock.chieftain.save(save_path)
         data = ws.receive()
         event = haddock.deserialize(json.loads(data))
 
         haddock.chieftain.mail_event(event)  # type: ignore
+        haddock.chieftain.save(save_path)
 
 
 app.run()

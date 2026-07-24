@@ -19,10 +19,6 @@ from clans.jorgenson.snotlout import (
     StoryRenderCommand,
     ReturnDataEvent,
 )
-from components.base import EventEmitButton
-from components.hofferson import Story, Prompt, Dialogue, Paragraph
-from stoick import TextualApplication
-
 
 class PromptRenderChief(haddock.RenderChief[PromptRenderCommand]):
     """
@@ -36,19 +32,13 @@ class PromptRenderChief(haddock.RenderChief[PromptRenderCommand]):
     command_type = PromptRenderCommand
 
     def render(
-        self, command: PromptRenderCommand, application: TextualApplication
+        self, command: PromptRenderCommand, application
     ) -> None:
-        async def _render() -> None:
-            await application.ensure_singleton(Story)
-            story = application.get_story()
-            if story is not None:
-                prompt = Prompt()
-                for label, event in command.options:
-                    prompt.options.append(EventEmitButton(label, event))
-                story.nodes.append(prompt)
-                story.refresh(recompose=True)
+        # data = []
+        # for label, event in command.options:
+        #     data.append([label, haddock.serialize(event)])
 
-        asyncio.create_task(_render())
+        application.send_data("prompt", [[label, haddock.serialize(event)] for label, event in command.options])
 
 
 class DialogueRenderChief(haddock.RenderChief[DialogueRenderCommand]):
@@ -63,33 +53,11 @@ class DialogueRenderChief(haddock.RenderChief[DialogueRenderCommand]):
     command_type = DialogueRenderCommand
 
     def render(
-        self, command: DialogueRenderCommand, application: TextualApplication
+        self, command: DialogueRenderCommand, application
     ) -> None:
-        async def _render() -> None:
-            await application.ensure_singleton(Story)
-            story = application.get_story()
-            if story is not None:
-                story.nodes.append(Dialogue(command.character, command.line))
-                story.refresh(recompose=True)
+        application.send_data("dialogue", [command.character, command.line])
 
-                # Send the event inside this function *after* Textual finishes
-                # loading, otherwise there could be a race condition between
-                # the Textual renderer and the next state's renderer system.
-                # PopStateEvent always pops the top of the stack, so always
-                # pop before sending the ReturnDataEvent and possibly inserting
-                # a new state. We send an EventSeries to ensure atomic operation
-                # and avoid rendering whatever state lies under the Dialogue state.
-                haddock.chieftain.mail_event(
-                    haddock.EventSeries(
-                        [
-                            haddock.PopStateEvent(),
-                            ReturnDataEvent(None, command.script),
-                        ]
-                    )
-                )
-
-        print("Rendering Dialogue")
-        asyncio.create_task(_render())
+        haddock.chieftain.mail_event(haddock.EventSeries([haddock.PopStateEvent(),ReturnDataEvent(None, command.script)]))
 
 
 class StoryRenderChief(haddock.RenderChief[StoryRenderCommand]):
@@ -103,24 +71,8 @@ class StoryRenderChief(haddock.RenderChief[StoryRenderCommand]):
     command_type = StoryRenderCommand
 
     def render(
-        self, command: StoryRenderCommand, application: TextualApplication
+        self, command: StoryRenderCommand, application
     ) -> None:
-        async def _render() -> None:
-            await application.ensure_singleton(Story)
-            story = application.get_story()
-            if story is not None:
-                story.nodes.append(Paragraph(command.line))
-                story.refresh(recompose=True)
+        application.send_data("story", command.line)
 
-                # This event is carefully structured
-                # See DialogueRenderChief
-                haddock.chieftain.mail_event(
-                    haddock.EventSeries(
-                        [
-                            haddock.PopStateEvent(),
-                            ReturnDataEvent(None, command.script),
-                        ]
-                    )
-                )
-
-        asyncio.create_task(_render())
+        haddock.chieftain.mail_event(haddock.EventSeries([haddock.PopStateEvent(),ReturnDataEvent(None, command.script)]))
